@@ -8,7 +8,6 @@ import DropdownMenuContent from '../ui/dropdown-menu/DropdownMenuContent.vue';
 import DropdownMenuItem from '../ui/dropdown-menu/DropdownMenuItem.vue';
 import DropdownMenuLabel from '../ui/dropdown-menu/DropdownMenuLabel.vue';
 import DropdownMenuSeparator from '../ui/dropdown-menu/DropdownMenuSeparator.vue';
-import DropdownMenuShortcut from '../ui/dropdown-menu/DropdownMenuShortcut.vue';
 import DropdownMenuTrigger from '../ui/dropdown-menu/DropdownMenuTrigger.vue';
 import { useUser } from '../usePocketbase';
 
