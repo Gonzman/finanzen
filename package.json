@@ -6,14 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-types": "bunx pocketbase-typegen --env --out src/lib/pocketbase-types.ts"
   },
   "dependencies": {
+    "@radix-icons/vue": "^1.0.0",
     "@tailwindcss/vite": "^4.1.1",
     "@vueuse/core": "^13.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-vue-next": "^0.487.0",
+    "npm": "^11.2.0",
     "pocketbase": "^0.25.2",
     "reka-ui": "^2.2.0",
     "tailwind-merge": "^3.1.0",

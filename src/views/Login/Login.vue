@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import Button from '@/components/ui/button/Button.vue'
+import CardContent from '@/components/ui/card/CardContent.vue'
+import CardHeader from '@/components/ui/card/CardHeader.vue'
+import CardTitle from '@/components/ui/card/CardTitle.vue'
+import Input from '@/components/ui/input/Input.vue'
 import { usePocketBase } from '@/components/usePocketbase'
 import { ref } from 'vue'
-import Button from '../ui/button/Button.vue'
-import CardContent from '../ui/card/CardContent.vue'
-import CardHeader from '../ui/card/CardHeader.vue'
-import CardTitle from '../ui/card/CardTitle.vue'
-import Input from '../ui/input/Input.vue'
 
 const pb = usePocketBase()
 const email = ref('')

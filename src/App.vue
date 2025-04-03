@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import Dashboard from './components/Dashboard/Dashboard.vue';
-import Login from './components/Login/Login.vue';
 import { usePocketBase } from './components/usePocketbase';
+import Dashboard from './views/Dashboard/Dashboard.vue';
+import Login from './views/Login/Login.vue';
 
 
 const pocketbase = usePocketBase()
 </script>
 
 <template>
-
   <div v-if="pocketbase.authStore.isValid">
-    <Dashboard></Dashboard>
+    <Dashboard/>
   </div>
   <Login v-else></Login>
 
