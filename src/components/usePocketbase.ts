@@ -122,6 +122,20 @@ class User {
     }
 }
 
+function shortName(name: string) {
+    // Regex to match "Test His" or "test.his"
+    const regex = /([A-Za-z])[a-z]*(?:[.\s])([A-Za-z])[a-z]*/i;
+    const match = name.match(regex);
+    if (match) {
+        return match[1].toUpperCase() + match[2].toUpperCase();
+    } else {
+        // If it doesn't match the pattern, return the full name or a default value
+        return name || 'Unknown';
+    }
+}
+
+export { shortName };
+
 export const useUser = () => {
     return User.getInstance();
 };
