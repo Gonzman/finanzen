@@ -1,57 +1,66 @@
-import type { AusschussRecord, TypedPocketBase, UsersRecord } from '@/lib/pocketbase-types'
-import PocketBase from 'pocketbase'
-import { ref, type Ref } from 'vue'
+import type {
+    AusschussRecord,
+    TypedPocketBase,
+    UsersRecord,
+} from '@/lib/pocketbase-types';
+import PocketBase from 'pocketbase';
+import { ref, type Ref } from 'vue';
 
 // Init the PocketBase instance with the correct URL.
 // By setting this in a .env file you can easily switch between development and production environments
-const client = new PocketBase(import.meta.env.VITE_POCKETBASE_URL) as TypedPocketBase
+const client = new PocketBase(
+    import.meta.env.VITE_POCKETBASE_URL,
+) as TypedPocketBase;
 
 client.authStore.onChange(() => {
     // Save the auth store to local storage
-    window.location.reload()
+    window.location.reload();
     if (client.authStore.isValid) {
-        User.getInstance()
+        User.getInstance();
     }
-})
+});
 
-export const usePocketBase = () => client
+export const usePocketBase = () => client;
 
 class User {
     private static instance: User;
     private id!: string;
     private name: string | null = null;
     private email!: string;
-    private committe = ref<AusschussRecord[]>([])
-    private image: Ref<string | null> = ref(null)
+    private committe = ref<AusschussRecord[]>([]);
+    private image: Ref<string | null> = ref(null);
 
     private constructor() {
         if (!client.authStore.record) {
             throw new Error('Auth store record is null');
         }
-        client.collection('users').getOne(client.authStore.record.id)
-        .then((userData) => {
-            const user = userData as UsersRecord;
-            this.id = user.id;
-            this.name = user.name ?? null;
-            this.email = user.email;
-            this.image.value = user.avatar ?? null;
-        })
-        .catch((error) => {
-            console.error('Error fetching user record:', error);
-            throw error; // Rethrow the error to be handled by the caller
-        });
-        
-        client.collection('ausschuss').getList()
-        .then((comitteData) => {
-          (comitteData.items as AusschussRecord[]).forEach((comitte) => {
-            this.committe.value.push(comitte);
+        client
+            .collection('users')
+            .getOne(client.authStore.record.id)
+            .then(userData => {
+                const user = userData as UsersRecord;
+                this.id = user.id;
+                this.name = user.name ?? null;
+                this.email = user.email;
+                this.image.value = user.avatar ?? null;
+            })
+            .catch(error => {
+                console.error('Error fetching user record:', error);
+                throw error; // Rethrow the error to be handled by the caller
             });
-            
-        })
-        .catch((error) => {
-            console.error('Error fetching comitte data:', error);
-            throw error; // Rethrow the error to be handled by the caller
-        });
+
+        client
+            .collection('ausschuss')
+            .getList()
+            .then(comitteData => {
+                (comitteData.items as AusschussRecord[]).forEach(comitte => {
+                    this.committe.value.push(comitte);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching comitte data:', error);
+                throw error; // Rethrow the error to be handled by the caller
+            });
     }
 
     static getInstance(): User {
@@ -79,7 +88,13 @@ class User {
     getUserName() {
         if (this.name!.includes('.')) {
             const nameParts = this.name!.split('.');
-            return nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1) + ' ' + nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1);
+            return (
+                nameParts[0].charAt(0).toUpperCase() +
+                nameParts[0].slice(1) +
+                ' ' +
+                nameParts[1].charAt(0).toUpperCase() +
+                nameParts[1].slice(1)
+            );
         } else {
             return this.name;
         }
@@ -107,6 +122,8 @@ class User {
     }
 }
 
-export const useUser = () => { return User.getInstance() }
+export const useUser = () => {
+    return User.getInstance();
+};
 
 //https://studioterabyte.nl/en/blog/pocketbase-vue-3
