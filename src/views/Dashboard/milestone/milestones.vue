@@ -3,6 +3,7 @@ import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import Input from '@/components/ui/input/Input.vue';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePocketBase } from '@/components/usePocketbase';
+import pb from '@/lib/pb';
 import type { MilestoneResponse, TransactionResponse } from '@/lib/pocketbase-types';
 import { ref, watch } from 'vue';
 
@@ -16,20 +17,10 @@ const props= defineProps({
 });
 
 
-const milestones = ref<MilestoneResponse<Expand>[]>([]);
+const milestones = pb.getMilestone(props.committee.id)
 
-const filteredMilestones = ref<MilestoneResponse<Expand>[]>([]);
+const filteredMilestones = milestones;
 
-filteredMilestones.value = milestones.value;
-
-
-type Expand = {
-  transaction: TransactionResponse[]
-}
-
-pocketbase.collection('milestone').getList<MilestoneResponse<Expand>>(1, 50, {expand: "transactions", filter: `ausschuss = "${props.committee.id}"`}).then((result) => {
-    milestones.value = result.items;
-});
 
 const filter = ref('');
 
@@ -63,7 +54,7 @@ watch(filter, (newValue) => {
       </TableRow>
     </TableHeader>
     <TableBody>
-      <TableRow v-for="invoice in milestones" :key="invoice.id">
+      <TableRow v-for="invoice in filteredMilestones" :key="invoice.id">
         <TableCell class="font-medium">
           {{ invoice.title }}
         </TableCell>

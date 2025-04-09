@@ -1,5 +1,7 @@
 import type {
     AusschussRecord,
+    TransactionAuthResponse,
+    TransactionResponse,
     TypedPocketBase,
     UsersRecord,
 } from '@/lib/pocketbase-types';
@@ -21,6 +23,8 @@ client.authStore.onChange(() => {
 });
 
 export const usePocketBase = () => client;
+
+
 
 class User {
     private static instance: User;
@@ -120,6 +124,8 @@ class User {
     logout() {
         client.authStore.clear();
     }
+
+
 }
 
 function shortName(name: string) {
