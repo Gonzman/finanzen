@@ -66,17 +66,22 @@ function createTransaction() {
 </script>
 
 <template>
-    <div class="flex flex-col space-y-4 items-center">
-        <div class="flex items-center space-x-2">
-            <Label>Ist eine ausgabe?</Label>
-            <Switch v-model="ausgabe"/>
+    <div class="flex flex-col space-y-4">
+        <div class="flex flex-col  items-center space-x-2">
+            <Label>Ist eine ausgabe? <Switch v-model="ausgabe"/></Label>
+            
         </div>
-
+        <Label>Titel</Label>
         <Input placeholder="Titel" v-model="title" />
+
+        <Label>Betrag</Label>
         <Input placeholder="Betrag" v-model="amount" type="number" />
+        <Label>Beschreibung</Label>
         <Textarea placeholder="Beschreibung" v-model="description"></Textarea>
 
+        <DialogClose as-child>
 
-        <Button :onclick="createTransaction">Erstellen</Button>
+        <Button :onclick="createTransaction" type="button" variant="default">Erstellen</Button>
+        </DialogClose>
     </div>
 </template>

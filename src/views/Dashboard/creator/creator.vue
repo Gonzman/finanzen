@@ -25,7 +25,6 @@
                 </div>
             </TabsContent>
         </Tabs>
-        <DialogClose>12</DialogClose>
     </DialogContent>
 </Dialog>
 </template>

@@ -7,6 +7,7 @@ import Milestones from './milestone/milestones.vue';
 import Transcactions from './transcactions/transcactions.vue';
 import Creator from './creator/creator.vue';
 import { useUser } from '@/components/usePocketbase';
+import Overview from './overview/overview.vue';
 
 const props= defineProps({
     committee: {
@@ -32,7 +33,7 @@ const user = useUser();
             <Creator v-if="props.committee.chair == user.userId" :committee="props.committee"/>
         </TabsList>
         <TabsContent value="overview">
-            Hallo
+            <Overview></Overview>
         </TabsContent>
         <TabsContent value="milestones">
             <Milestones :committee="props.committee" :key="props.committee.id"/>
