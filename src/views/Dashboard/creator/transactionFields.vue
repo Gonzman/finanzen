@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
-import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionResponse } from '@/lib/pocketbase-types';
+import { TransactionAuthStateOptions, TransactionTypeOptions, } from '@/lib/pocketbase-types';
 import { ref } from 'vue';
 
 const props = defineProps({

@@ -2,12 +2,8 @@
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import Input from '@/components/ui/input/Input.vue';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { usePocketBase } from '@/components/usePocketbase';
 import pb from '@/lib/pb';
-import type { MilestoneResponse, TransactionResponse } from '@/lib/pocketbase-types';
 import { ref, watch } from 'vue';
-
-const pocketbase = usePocketBase();
 
 const props= defineProps({
     committee: {

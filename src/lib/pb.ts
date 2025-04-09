@@ -20,14 +20,14 @@ class pb {
 
 
     getTransaction(ausschuss: string) {
-        usePocketBase().collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({expand: "createdby, transaction", sort: "-updated", filter: `transaction.ausschuss = "${ausschuss}"`}).then((result) => {
+        this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({expand: "createdby, transaction", sort: "-updated", filter: `transaction.ausschuss = "${ausschuss}"`}).then((result) => {
             this.transaction.value = result    
         });
         return this.transaction;
     }
 
     getMilestone(ausschuss: string) {
-        usePocketBase().collection('milestone').getFullList<MilestoneResponse<ExpandMilestones>>({expand: "transaction", sort: "-updated", filter: `ausschuss = "${ausschuss}"`}).then((result) => {
+        this.client.collection('milestone').getFullList<MilestoneResponse<ExpandMilestones>>({expand: "transaction", sort: "-updated", filter: `ausschuss = "${ausschuss}"`}).then((result) => {
             this.milestone.value = result    
         });
         return this.milestone;

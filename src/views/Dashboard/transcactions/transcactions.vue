@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePocketBase } from '@/components/usePocketbase';
 import pb from '@/lib/pb';
-import type {TransactionAuthResponse, TransactionResponse, UsersRecord } from '@/lib/pocketbase-types';
 import { onUnmounted, ref, watch } from 'vue';
 
 const pocketbase = usePocketBase();

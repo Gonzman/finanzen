@@ -1,7 +1,5 @@
 import type {
     AusschussRecord,
-    TransactionAuthResponse,
-    TransactionResponse,
     TypedPocketBase,
     UsersRecord,
 } from '@/lib/pocketbase-types';
