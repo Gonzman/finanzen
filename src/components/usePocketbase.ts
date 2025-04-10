@@ -12,6 +12,8 @@ const client = new PocketBase(
     import.meta.env.VITE_POCKETBASE_URL,
 ) as TypedPocketBase;
 
+client.autoCancellation(false);
+
 client.authStore.onChange(() => {
     // Save the auth store to local storage
     window.location.reload();

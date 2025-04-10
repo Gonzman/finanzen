@@ -32,7 +32,7 @@ function createTransaction() {
     const data = {
         title: title.value,
         message: description.value,
-        amount: amount.value,
+        amount: ausgabe.value ? amount.value * -1 : amount.value,
         ausschuss: props.committee.id,
         createdby: user.userId,
         type: ausgabe.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,

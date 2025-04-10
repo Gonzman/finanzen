@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import type { MilestoneResponse, TransactionAuthResponse, TransactionResponse, UsersRecord } from "./pocketbase-types";
+import { TransactionAuthStateOptions, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord } from "./pocketbase-types";
 import { usePocketBase } from "@/components/usePocketbase";
 
 class pb {
@@ -31,6 +31,42 @@ class pb {
             this.milestone.value = result    
         });
         return this.milestone;
+    }
+
+    async getBudget(ausschuss: string): Promise<number> {
+        let budget = 0;
+        try {
+            const result = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                sort: "-updated",
+                expand: "createdby, transaction",
+                filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Autorisiert}" && state != "${TransactionAuthStateOptions.Fehlgeschlagen}"`
+            });
+
+            for (const item of result) {
+                budget += item.expand?.transaction.amount ?? 0;
+            }
+        } catch (error) {
+            console.error("Error fetching budget:", error);
+        }
+        return budget;
+    }
+
+    async overAllBudget(): Promise<number> {
+        let budget = 0;
+        try {
+            const result = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                sort: "-updated",
+                expand: "createdby, transaction",
+                filter: `state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state != "${TransactionAuthStateOptions.Autorisiert}"`
+            });
+
+            for (const item of result) {
+                budget += item.expand?.transaction.amount ?? 0;
+            }
+        } catch (error) {
+            console.error("Error fetching budget:", error);
+        }
+        return budget;
     }
 }
 

@@ -33,7 +33,7 @@ const user = useUser();
             <Creator v-if="props.committee.chair == user.userId" :committee="props.committee"/>
         </TabsList>
         <TabsContent value="overview">
-            <Overview></Overview>
+            <Overview :committee="props.committee" :key="props.committee.id"></Overview>
         </TabsContent>
         <TabsContent value="milestones">
             <Milestones :committee="props.committee" :key="props.committee.id"/>
