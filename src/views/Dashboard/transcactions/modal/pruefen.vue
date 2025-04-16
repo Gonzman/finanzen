@@ -62,6 +62,7 @@ import { TransactionAuthStateOptions, type TransactionAuthResponse } from '@/lib
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
 import Switch from '@/components/ui/switch/Switch.vue';
+
 const props = defineProps({
     id: {
         type: Object as PropType<TransactionAuthResponse>,
@@ -72,36 +73,42 @@ const props = defineProps({
 const state = ref(props.id.state);
 const auth = ref(props.id.acceptedby.includes(useUser().userId));
 
-
-function pruefen(){
-
+function pruefen() {
     let stateT = state.value;
 
-    if (auth.value && state.value === TransactionAuthStateOptions['In Bearbeitung']) {
+    if (auth.value && state.value === TransactionAuthStateOptions['Ausstehend']) {
         stateT = TransactionAuthStateOptions['In Bearbeitung'];
     }
 
-    if(!auth.value && state.value === TransactionAuthStateOptions['Autorisiert']){
+    if (auth.value != props.id.acceptedby.includes(useUser().userId) && state.value == TransactionAuthStateOptions['Autorisiert']) {
+        stateT = TransactionAuthStateOptions['In Bearbeitung'];
+    }
+
+    if (!auth.value && state.value === TransactionAuthStateOptions['Autorisiert']) {
         auth.value = true;
     }
+
+
+
     let data;
-    if(auth.value){
+    if (auth.value) {
         data = {
             id: props.id.id,
             state: stateT,
             "acceptedby+": useUser().userId,
         };
-    }else{
+    } else {
         data = {
             id: props.id.id,
             state: stateT,
             "acceptedby-": useUser().userId,
         };
     }
-    
+
     const pb = usePocketBase();
 
-    pb.collection('transactionAuth').update(props.id.id, data)
+    pb.collection('transactionAuth')
+        .update(props.id.id, data)
         .then(() => {
             // Handle success
             console.log('Transaction updated successfully');
@@ -110,8 +117,5 @@ function pruefen(){
             // Handle error
             console.error('Error updating transaction:', error);
         });
-
-
-    
 }
 </script>
