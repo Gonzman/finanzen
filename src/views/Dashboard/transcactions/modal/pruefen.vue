@@ -84,13 +84,21 @@ function pruefen(){
     if(!auth.value && state.value === TransactionAuthStateOptions['Autorisiert']){
         auth.value = true;
     }
-
-
-    const data = {
-        id: props.id.id,
-        state: stateT,
-        acceptedby: auth.value ? [...props.id.acceptedby, useUser().userId] : props.id.acceptedby,
-    };
+    let data;
+    if(auth.value){
+        data = {
+            id: props.id.id,
+            state: stateT,
+            "acceptedby+": useUser().userId,
+        };
+    }else{
+        data = {
+            id: props.id.id,
+            state: stateT,
+            "acceptedby-": useUser().userId,
+        };
+    }
+    
     const pb = usePocketBase();
 
     pb.collection('transactionAuth').update(props.id.id, data)
