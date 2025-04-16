@@ -94,7 +94,7 @@ if (
             <PopoverContent class="w-[200px] p-0">
                 <Command>
                     <CommandList>
-                        <CommandInput placeholder="Nach gr" />
+                        <CommandInput placeholder="Nach Grämien suchen" />
                         <CommandEmpty>Gremium nicht gefunden.</CommandEmpty>
                         <CommandGroup :heading="groups.label">
                             <CommandItem

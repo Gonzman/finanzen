@@ -19,16 +19,15 @@ const committee: Ref<Team> = ref({
 
 <template>
     <div class="hidden flex-col md:flex">
-        <div class="border-b space-y-4 pl-4">
+        <div class="border-b space-y-4 pl-4 fixed top-0 left-0 right-0 bg-white z-10">
             <div class="flex h-16 items-center px-4">
                 <TeamSwitcher v-model="committee" />
                 <div class="ml-auto flex items-center space-x-4">
-                    <Search />
                     <UserNav />
                 </div>
             </div>
         </div>
-        <div class="flex-1 space-y-4 p-8 pt-6">
+        <div class="flex-1 space-y-4 p-8 pt-24">
             <Select :committee="committee"></Select>
         </div>
 

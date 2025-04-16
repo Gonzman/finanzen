@@ -28,11 +28,13 @@ export const usePocketBase = () => client;
 
 class User {
     private static instance: User;
+    private static _isInitialized = ref(false);
     private id!: string;
     private name: string | null = null;
     private email!: string;
     private committe = ref<AusschussRecord[]>([]);
     private image: Ref<string | null> = ref(null);
+    private pruefer!: boolean
 
     private constructor() {
         if (!client.authStore.record) {
@@ -47,6 +49,10 @@ class User {
                 this.name = user.name ?? null;
                 this.email = user.email;
                 this.image.value = user.avatar ?? null;
+                console.log('User image:', user.isPruefer);
+                this.pruefer = user.isPruefer ?? false;
+                console.log('User data:', user);
+                User._isInitialized.value = true;
             })
             .catch(error => {
                 console.error('Error fetching user record:', error);
@@ -125,6 +131,13 @@ class User {
         client.authStore.clear();
     }
 
+    isPruefer() {
+        return this.pruefer;
+    }
+
+    static get isInitialized() {
+        return User._isInitialized;
+    }
 
 }
 
@@ -140,7 +153,7 @@ function shortName(name: string) {
     }
 }
 
-export { shortName };
+export { shortName, User };
 
 export const useUser = () => {
     return User.getInstance();

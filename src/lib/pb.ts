@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { TransactionAuthStateOptions, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord } from "./pocketbase-types";
+import { TransactionAuthStateOptions, TransactionTypeOptions, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord } from "./pocketbase-types";
 import { usePocketBase } from "@/components/usePocketbase";
 
 class pb {
@@ -8,7 +8,33 @@ class pb {
     private client = usePocketBase();
     private static instance: pb;
     private constructor() {
-       
+        if (!this.client.authStore.isValid) {
+            console.error("User is not authenticated");
+            return;
+        }
+
+       this.client.collection('transactionAuth').subscribe<TransactionAuthResponse<ExpandTransaction>>('*', (e) => {
+            console.log(e);
+            if (e.action === 'delete') {
+                this.transaction.value = this.transaction.value.filter((item) => item.id !== e.record.id);
+            }else if (e.action === 'update') {
+                const index = this.transaction.value.findIndex((item) => item.id === e.record.id);
+                if (index !== -1) {
+                    this.transaction.value[index] = e.record;
+                }
+            }
+        }, {expand: "createdby, transaction"}).catch((error) => {
+            console.error("Error subscribing to transactionAuth collection:", error);
+        });
+
+        this.client.collection('transaction').subscribe<TransactionResponse>('*', (e) => {
+            console.log(e);
+            if (e.action === 'delete') {
+
+            } else if (e.action === 'update') {
+
+            }
+        });
     }
 
     public static getInstance() {
@@ -39,7 +65,7 @@ class pb {
             const result = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "createdby, transaction",
-                filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Autorisiert}" && state != "${TransactionAuthStateOptions.Fehlgeschlagen}"`
+                filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && (transaction.type = "${TransactionTypeOptions.Eingehend}" && state = "${TransactionAuthStateOptions.Autorisiert}")`
             });
 
             for (const item of result) {
@@ -57,7 +83,7 @@ class pb {
             const result = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "createdby, transaction",
-                filter: `state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state != "${TransactionAuthStateOptions.Autorisiert}"`
+                filter: `state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && (transaction.type = "${TransactionTypeOptions.Eingehend}" && state = "${TransactionAuthStateOptions.Autorisiert}")`
             });
 
             for (const item of result) {

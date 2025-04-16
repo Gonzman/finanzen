@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import { Button } from '@/components/ui/button';
+import { DialogClose } from '@/components/ui/dialog';
 import Input from '@/components/ui/input/Input.vue';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -17,7 +18,7 @@ const props = defineProps({
 });
 
 const title = ref('');
-const description = ref('');
+const description = ref("");
 const amount = ref(0);
 const ausgabe = ref(false);
 
@@ -26,7 +27,6 @@ const pocketbase = usePocketBase();
 
 function createTransaction() {
     if (title.value.length < 1) return;
-    if (description.value.length < 1) return;
     if (amount.value < 1) return;
 
     const data = {
@@ -38,27 +38,12 @@ function createTransaction() {
         type: ausgabe.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,
     };
 
-    pocketbase.collection('transaction').create(data).then((data) => {
-
-        pocketbase.collection('transactionAuth').create({
-            transaction: data.id,
-            state: TransactionAuthStateOptions.Ausstehend,
-            createdby: user.userId,
-        }).then(() => {
-            console.log('Transaction created successfully');
-            title.value = '';
-            description.value = '';
-            amount.value = 0;
-
-        }).catch((error) => {
-            console.error('Error creating transaction auth:', error);
-            pocketbase.collection('transaction').delete(data.id).then(() => {
-                console.log('Transaction deleted successfully');
-
-            }).catch((error) => {
-                console.error('Error deleting transaction:', error);
-            });
-        });
+    pocketbase.collection('transaction').create(data).then(() => {
+        title.value = '';
+        description.value = '';
+        amount.value = 0;   
+    }).catch((error) => {
+        console.error('Error creating transaction:', error);
     });
 }
 

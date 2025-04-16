@@ -27,8 +27,8 @@ const user = useUser();
     <Tabs default-value="overview" class="space-y-4 deep">
         <TabsList>
             <TabsTrigger value="overview"> Überblick </TabsTrigger>
-            <TabsTrigger value="milestones"> Meilensteine </TabsTrigger>
             <TabsTrigger value="transactions"> Transaktionen </TabsTrigger>
+            <TabsTrigger value="milestones" disabled> Meilensteine </TabsTrigger>
             <Separator orientation="vertical" class="m-2" v-if="props.committee.chair == user.userId"/>
             <Creator v-if="props.committee.chair == user.userId" :committee="props.committee"/>
         </TabsList>
