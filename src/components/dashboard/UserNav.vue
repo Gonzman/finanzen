@@ -10,7 +10,6 @@ import DropdownMenuLabel from '../ui/dropdown-menu/DropdownMenuLabel.vue';
 import DropdownMenuSeparator from '../ui/dropdown-menu/DropdownMenuSeparator.vue';
 import DropdownMenuTrigger from '../ui/dropdown-menu/DropdownMenuTrigger.vue';
 import { useUser } from '../usePocketbase';
-
 const user = useUser();
 //      <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
 </script>
