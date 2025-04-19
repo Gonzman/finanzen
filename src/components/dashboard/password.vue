@@ -36,8 +36,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ref, type PropType } from 'vue';
-import { TransactionAuthStateOptions, type TransactionAuthResponse } from '@/lib/pocketbase-types';
+import { ref } from 'vue';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
 import { Input } from '@/components/ui/input';
 

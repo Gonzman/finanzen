@@ -3,20 +3,18 @@
     
     <Card class="w-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">Total Revenue</CardTitle>
+        <CardTitle class="text-sm font-medium">Gesamt Budget</CardTitle>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ overAllBudget.toLocaleString()}} €</div>
-        <p class="text-xs text-muted-foreground">+20.1% from last month</p>
       </CardContent>
     </Card>
     <Card class="w-full">
       <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle class="text-sm font-medium">Total Revenue</CardTitle>
+        <CardTitle class="text-sm font-medium">Gremium Budget</CardTitle>
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ budget.toLocaleString() }} €</div>
-        <p class="text-xs text-muted-foreground">+20.1% from last month</p>
       </CardContent>
     </Card>
   </div>
@@ -26,7 +24,7 @@
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import pb from '@/lib/pb';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const props = defineProps({
   committee: {
@@ -58,7 +56,9 @@ const fetchOverAllBudget = () => {
     });
 };
 
-fetchBudget(props.committee.id);
+onMounted(() => {
+  fetchBudget(props.committee.id);
   fetchOverAllBudget();
+});
 
 </script>

@@ -23,7 +23,7 @@ import { useUser } from '../usePocketbase';
 const user = useUser();
 
 // Ensure commiteList has a fallback value
-const commiteList = user.getCommitteList() || [];
+const commiteList = user.getCommitteList();
 console.log('commiteList', commiteList);
 
 // Use ref for groups.teams

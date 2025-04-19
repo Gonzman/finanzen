@@ -5,15 +5,8 @@ import UserNav from '@/components/dashboard/UserNav.vue';
 import { ref, type Ref } from 'vue';
 import Select from './Select.vue';
 
-const committee: Ref<Team> = ref({
-    chair: '',
-    id: '',
-    name: '',
-    created: undefined,
-    updated: undefined,
-    users: undefined,
-});
-
+// Initialize as null for consistency with TeamSwitcher
+const committee: Ref<Team | null> = ref(null);
 </script>
 
 <template>
@@ -27,9 +20,8 @@ const committee: Ref<Team> = ref({
             </div>
         </div>
         <div class="flex-1 space-y-4 p-8 pt-24">
-            <Select :committee="committee"></Select>
+            <Select v-if="committee && committee.id" :committee="committee" :key="committee.id" />
         </div>
-
-        <div class="flex-1 space-y-4 p-8 pt-6">{{ committee.id ?? "" }}</div>
+        <div class="flex-1 space-y-4 p-8 pt-6">{{ committee?.id ?? "" }}</div>
     </div>
 </template>

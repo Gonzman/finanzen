@@ -8,33 +8,7 @@ class pb {
     private client = usePocketBase();
     private static instance: pb;
     private constructor() {
-        if (!this.client.authStore.isValid) {
-            console.error("User is not authenticated");
-            return;
-        }
 
-       this.client.collection('transactionAuth').subscribe<TransactionAuthResponse<ExpandTransaction>>('*', (e) => {
-            console.log(e);
-            if (e.action === 'delete') {
-                this.transaction.value = this.transaction.value.filter((item) => item.id !== e.record.id);
-            }else if (e.action === 'update') {
-                const index = this.transaction.value.findIndex((item) => item.id === e.record.id);
-                if (index !== -1) {
-                    this.transaction.value[index] = e.record;
-                }
-            }
-        }, {expand: "createdby, transaction"}).catch((error) => {
-            console.error("Error subscribing to transactionAuth collection:", error);
-        });
-
-        this.client.collection('transaction').subscribe<TransactionResponse>('*', (e) => {
-            console.log(e);
-            if (e.action === 'delete') {
-
-            } else if (e.action === 'update') {
-
-            }
-        });
     }
 
     public static getInstance() {
@@ -93,6 +67,41 @@ class pb {
             console.error("Error fetching budget:", error);
         }
         return budget;
+    }
+
+    startSync() {
+        if (!this.client.authStore.isValid) {
+            console.error("User is not authenticated");
+            return;
+        }
+
+       this.client.collection('transactionAuth').subscribe<TransactionAuthResponse<ExpandTransaction>>('*', (e) => {
+            console.log(e);
+            if (e.action === 'delete') {
+                this.transaction.value = this.transaction.value.filter((item) => item.id !== e.record.id);
+            }else if (e.action === 'update') {
+                const index = this.transaction.value.findIndex((item) => item.id === e.record.id);
+                if (index !== -1) {
+                    this.transaction.value[index] = e.record;
+                }
+            }
+        }, {expand: "createdby, transaction"}).catch((error) => {
+            console.error("Error subscribing to transactionAuth collection:", error);
+        });
+
+        this.client.collection('transaction').subscribe<TransactionResponse>('*', (e) => {
+            console.log(e);
+            if (e.action === 'delete') {
+
+            } else if (e.action === 'update') {
+
+            }
+        });
+    }
+
+    stopSync() {
+        this.client.collection('transactionAuth').unsubscribe('*');
+        this.client.collection('transaction').unsubscribe('*');
     }
 }
 

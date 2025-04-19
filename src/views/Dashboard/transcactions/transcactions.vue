@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue';
-import { usePocketBase, useUser } from '@/components/usePocketbase';
+import { ref, computed } from 'vue';
+import { useUser } from '@/components/usePocketbase';
 import pb from '@/lib/pb';
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import { Input } from '@/components/ui/input';
@@ -10,8 +10,6 @@ import Button from '@/components/ui/button/Button.vue';
 import Edit from './modal/edit.vue';
 import Delete from './modal/delete.vue';
 import Pruefen from './modal/pruefen.vue';
-
-const pocketbase = usePocketBase();
 
 const props = defineProps({
     committee: {

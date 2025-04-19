@@ -6,9 +6,10 @@ import { type Team } from '@/components/dashboard/TeamSwitcher.vue';
 import Milestones from './milestone/milestones.vue';
 import Transcactions from './transcactions/transcactions.vue';
 import Creator from './creator/creator.vue';
-import { useUser } from '@/components/usePocketbase';
+import { usePocketBase, useUser } from '@/components/usePocketbase';
 import Overview from './overview/overview.vue';
-
+import { onMounted, onUnmounted } from 'vue';
+import pb from '@/lib/pb';
 const props= defineProps({
     committee: {
         type: Object as () => Team,
@@ -16,7 +17,17 @@ const props= defineProps({
     } as const,
 });
 
+const emit = defineEmits(['update:modelValue']);
+
 const user = useUser();
+
+onMounted(() =>{
+    pb.startSync()
+});
+
+onUnmounted(() => {
+    pb.stopSync()
+});
 
 </script>
 
