@@ -105,7 +105,6 @@ export type MilestoneRecord = {
 	id: string
 	message?: string
 	title: string
-	transactions: RecordIdString[]
 	updated?: IsoDateString
 }
 
@@ -120,6 +119,7 @@ export type TransactionRecord = {
 	createdby: RecordIdString
 	id: string
 	message?: string
+	milestone?: RecordIdString
 	title: string
 	type: TransactionTypeOptions
 	updated?: IsoDateString

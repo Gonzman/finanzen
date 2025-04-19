@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { CaretSortIcon, CheckIcon } from '@radix-icons/vue';
 
 import Dialog from '../ui/dialog/Dialog.vue';
@@ -54,12 +54,15 @@ if (
         users: undefined,
     })
 ) {
-        selectedTeam.value = groups.value.teams[0] || null;
+    selectedTeam.value = groups.value.teams[0] || null;
     }
-    if (selectedTeam.value) {
+    if (selectedTeam.value !== null) {
         clearInterval(intervall);
     }
 }, 100);
+
+
+
 </script>
 
 <template>
