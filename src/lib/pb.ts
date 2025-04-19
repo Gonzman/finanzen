@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { TransactionAuthStateOptions, TransactionTypeOptions, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord } from "./pocketbase-types";
+import { TransactionAuthStateOptions, TransactionTypeOptions, type AusschussRecord, type AusschussResponse, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord } from "./pocketbase-types";
 import { usePocketBase } from "@/components/usePocketbase";
 
 class pb {
@@ -101,7 +101,13 @@ export default pb.getInstance();
 type ExpandTransaction = {
     createdby: UsersRecord,
     transaction: TransactionResponse,
+    milestone: MilestoneResponse,
+    ausschuss: AusschussResponse,
 }
+
+type ExpandTransactionCommittee = {
+    ausschuss: AusschussResponse,
+} 
 
 type ExpandMilestones = {
     transaction: TransactionResponse[]
