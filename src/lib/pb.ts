@@ -20,7 +20,11 @@ class pb {
 
 
     getTransaction(ausschuss: string) {
-        this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({expand: "createdby, transaction", sort: "-updated", filter: `transaction.ausschuss = "${ausschuss}"`}).then((result) => {
+        this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
+            expand: "createdby, transaction, transaction.ausschuss",
+            sort: "-updated", 
+            filter: `transaction.ausschuss = "${ausschuss}"`
+        }).then((result) => {
             this.transaction.value = result    
         });
         return this.transaction;
@@ -109,9 +113,8 @@ export default pb.getInstance();
 
 type ExpandTransaction = {
     createdby: UsersRecord,
-    transaction: TransactionResponse,
+    transaction: TransactionResponse<ExpandTransactionCommittee>,
     milestone: MilestoneResponse,
-    ausschuss: AusschussResponse,
 }
 
 type ExpandTransactionCommittee = {
