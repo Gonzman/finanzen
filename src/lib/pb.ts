@@ -21,7 +21,7 @@ class pb {
 
     getTransaction(ausschuss: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-            expand: "createdby, transaction, transaction.ausschuss",
+            expand: "createdby, transaction",
             sort: "-updated", 
             filter: `transaction.ausschuss = "${ausschuss}"`
         }).then((result) => {
@@ -113,7 +113,7 @@ export default pb.getInstance();
 
 type ExpandTransaction = {
     createdby: UsersRecord,
-    transaction: TransactionResponse<ExpandTransactionCommittee>,
+    transaction: TransactionResponse,
     milestone: MilestoneResponse,
 }
 
