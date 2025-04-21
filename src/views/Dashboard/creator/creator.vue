@@ -11,7 +11,7 @@
             </DialogHeader>
             <TabsList class="grid w-full grid-cols-2">
                 <TabsTrigger value="transaktion">Transkation</TabsTrigger>
-                <TabsTrigger value="meilenstein" disabled>Meilenstein</TabsTrigger>
+                <TabsTrigger value="meilenstein">Meilenstein</TabsTrigger>
             </TabsList>
             <TabsContent value="transaktion">
                 <div class="space-y-4">
@@ -19,10 +19,7 @@
                 </div>
             </TabsContent>
             <TabsContent value="meilenstein">
-                <div class="space-y-4">
-                    <Input placeholder="Einladungslink" />
-                    <Button>Beitreten</Button>
-                </div>
+                <MilestoneFileds :committee="props.committee"></MilestoneFileds>
             </TabsContent>
         </Tabs>
     </DialogContent>
@@ -37,6 +34,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DialogHeader from '@/components/ui/dialog/DialogHeader.vue';
 import TransactionFields from './transactionFields.vue';
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
+import Create from './milestoneFileds.vue';
+import MilestoneFileds from './milestoneFileds.vue';
 
 
 const props = defineProps({

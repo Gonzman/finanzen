@@ -27,7 +27,7 @@ function createTransaction() {
     usePocketBase().collection('transaction').update(props.id.id, {
         title: title.value,
         message: description.value,
-        amount: ausgabe.value ? amount.value * -1 : amount.value,
+        amount: ausgabe.value ? -Math.abs(amount.value) : Math.abs(amount.value),
         type: ausgabe.value ? 'Ausgehend' : 'Eingehend',
     }).then(() => {
         console.log('Transaction updated successfully');

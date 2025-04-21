@@ -21,7 +21,7 @@ class pb {
 
     getTransaction(ausschuss: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-            expand: "createdby, transaction",
+            expand: "createdby, transaction ",
             sort: "-updated", 
             filter: `transaction.ausschuss = "${ausschuss}"`
         }).then((result) => {
@@ -40,13 +40,27 @@ class pb {
     async getBudget(ausschuss: string): Promise<number> {
         let budget = 0;
         try {
-            const result = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
+            // Get all authorized transactions
+            const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "createdby, transaction",
-                filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && (transaction.type = "${TransactionTypeOptions.Eingehend}" && state = "${TransactionAuthStateOptions.Autorisiert}")`
+                filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
-            for (const item of result) {
+            // Simply add all authorized transaction amounts (they already have the correct sign)
+            for (const item of authorizedResult) {
+                budget += item.expand?.transaction.amount ?? 0;
+            }
+            
+            // Get all "In Bearbeitung" transactions
+            const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                sort: "-updated",
+                expand: "createdby, transaction",
+                filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions["In Bearbeitung"]}"`
+            });
+
+            // Add all "In Bearbeitung" transaction amounts (they already have the correct sign)
+            for (const item of inProgressResult) {
                 budget += item.expand?.transaction.amount ?? 0;
             }
         } catch (error) {
@@ -58,13 +72,27 @@ class pb {
     async overAllBudget(): Promise<number> {
         let budget = 0;
         try {
-            const result = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
+            // Get all authorized transactions
+            const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "createdby, transaction",
-                filter: `state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && (transaction.type = "${TransactionTypeOptions.Eingehend}" && state = "${TransactionAuthStateOptions.Autorisiert}")`
+                filter: `state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
-            for (const item of result) {
+            // Simply add all authorized transaction amounts (they already have the correct sign)
+            for (const item of authorizedResult) {
+                budget += item.expand?.transaction.amount ?? 0;
+            }
+            
+            // Get all "In Bearbeitung" transactions
+            const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                sort: "-updated",
+                expand: "createdby, transaction",
+                filter: `state = "${TransactionAuthStateOptions["In Bearbeitung"]}"`
+            });
+
+            // Add all "In Bearbeitung" transaction amounts (they already have the correct sign)
+            for (const item of inProgressResult) {
                 budget += item.expand?.transaction.amount ?? 0;
             }
         } catch (error) {
