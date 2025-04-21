@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { TransactionAuthStateOptions, TransactionTypeOptions, type AusschussRecord, type AusschussResponse, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord } from "./pocketbase-types";
+import { TransactionAuthStateOptions, type AusschussResponse, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord } from "./pocketbase-types";
 import { usePocketBase } from "@/components/usePocketbase";
 
 class pb {
@@ -8,7 +8,7 @@ class pb {
     private client = usePocketBase();
     private static instance: pb;
     private constructor() {
-
+        this.startSync();
     }
 
     public static getInstance() {
@@ -18,12 +18,69 @@ class pb {
         return pb.instance;
     }
 
+    // Get the current ausschuss filter from the transaction data if available
+    private getCurrentAusschuss(): string | null {
+        if (this.transaction.value.length > 0 && this.transaction.value[0].expand?.transaction?.ausschuss) {
+            return this.transaction.value[0].expand.transaction.ausschuss;
+        }
+        return null;
+    }
+
+    // Refresh transactions with the current filter
+    refreshTransactions(ausschuss?: string) {
+        // If we have a current filter (ausschuss), use it
+        const currentAusschuss = ausschuss || this.getCurrentAusschuss();
+        
+        if (currentAusschuss) {
+            return this.getTransaction(currentAusschuss);
+        } else {
+            // If no specific ausschuss, fetch all transactions
+            return this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                expand: "createdby, transaction",
+                sort: "-updated"
+            }).then((result) => {
+                this.transaction.value = result;
+                return this.transaction;
+            });
+        }
+    }
+    
+    // Refresh milestones with the current filter
+    refreshMilestones(ausschuss?: string) {
+        // If we have a current filter (ausschuss), use it
+        const currentAusschuss = ausschuss || this.getCurrentAusschuss();
+        
+        if (currentAusschuss) {
+            return this.getMilestone(currentAusschuss);
+        } else {
+            // If no specific ausschuss, fetch all milestones
+            return this.client.collection('milestone').getFullList<MilestoneResponse<ExpandMilestones>>({
+                expand: "transaction",
+                sort: "-updated"
+            }).then((result) => {
+                this.milestone.value = result;
+                return this.milestone;
+            });
+        }
+    }
 
     getTransaction(ausschuss: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
             expand: "createdby, transaction ",
             sort: "-updated", 
             filter: `transaction.ausschuss = "${ausschuss}"`
+        }).then((result) => {
+            this.transaction.value = result    
+        });
+        return this.transaction;
+    }
+
+    // New method to get transactions for a specific milestone
+    getMilestoneTransactions(milestoneId: string) {
+        this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
+            expand: "createdby, transaction",
+            sort: "-updated", 
+            filter: `transaction.milestone = "${milestoneId}"`
         }).then((result) => {
             this.transaction.value = result    
         });
@@ -108,13 +165,30 @@ class pb {
         }
 
        this.client.collection('transactionAuth').subscribe<TransactionAuthResponse<ExpandTransaction>>('*', (e) => {
-            console.log(e);
+            console.log('Transaction Auth update:', e);
             if (e.action === 'delete') {
                 this.transaction.value = this.transaction.value.filter((item) => item.id !== e.record.id);
-            }else if (e.action === 'update') {
+            } else if (e.action === 'update') {
                 const index = this.transaction.value.findIndex((item) => item.id === e.record.id);
                 if (index !== -1) {
+                    // Update the record with the new data directly from subscription
                     this.transaction.value[index] = e.record;
+                } else {
+                    // If the record matches our current filter (if any), add it
+                    const currentAusschuss = this.getCurrentAusschuss();
+                    if (!currentAusschuss || (e.record.expand?.transaction?.ausschuss === currentAusschuss)) {
+                        this.transaction.value.push(e.record);
+                    }
+                }
+            } else if (e.action === 'create') {
+                // If the record matches our current filter (if any), add it
+                const currentAusschuss = this.getCurrentAusschuss();
+                if (!currentAusschuss || (e.record.expand?.transaction?.ausschuss === currentAusschuss)) {
+                    this.transaction.value.push(e.record);
+                    // Sort the array to maintain the ordering
+                    this.transaction.value.sort((a, b) => 
+                        new Date(b.updated).getTime() - new Date(a.updated).getTime()
+                    );
                 }
             }
         }, {expand: "createdby, transaction"}).catch((error) => {
@@ -122,24 +196,69 @@ class pb {
         });
 
         this.client.collection('transaction').subscribe<TransactionResponse>('*', (e) => {
-            console.log(e);
+            console.log('Transaction update:', e);
             if (e.action === 'delete') {
-
+                // Remove any transactionAuth records that reference this transaction
+                // This is more efficient than refetching everything
+                this.transaction.value = this.transaction.value.filter(
+                    item => item.expand?.transaction?.id !== e.record.id
+                );
             } else if (e.action === 'update') {
-
+                // Update transaction data in any transactionAuth records that reference it
+                for (let i = 0; i < this.transaction.value.length; i++) {
+                    if (this.transaction.value[i].expand?.transaction?.id === e.record.id) {
+                        // Update the transaction data directly
+                        if (this.transaction.value[i].expand) {
+                            this.transaction.value[i].expand!.transaction = e.record;
+                        }
+                    }
+                }
             }
+            // No need to handle 'create' for base transaction as it doesn't appear in lists until
+            // a transactionAuth record references it
+        });
+        
+        this.client.collection('milestone').subscribe<MilestoneResponse<ExpandMilestones>>('*', (e) => {
+            console.log('Milestone update:', e);
+            if (e.action === 'delete') {
+                this.milestone.value = this.milestone.value.filter((item) => item.id !== e.record.id);
+            } else if (e.action === 'update') {
+                const index = this.milestone.value.findIndex((item) => item.id === e.record.id);
+                if (index !== -1) {
+                    this.milestone.value[index] = e.record;
+                } else {
+                    // If the record matches our current filter (if any), add it
+                    const currentAusschuss = this.getCurrentAusschuss();
+                    if (!currentAusschuss || (e.record.ausschuss === currentAusschuss)) {
+                        this.milestone.value.push(e.record);
+                    }
+                }
+            } else if (e.action === 'create') {
+                // If the record matches our current filter (if any), add it
+                const currentAusschuss = this.getCurrentAusschuss();
+                if (!currentAusschuss || (e.record.ausschuss === currentAusschuss)) {
+                    this.milestone.value.push(e.record);
+                    // Sort the array to maintain the ordering
+                    this.milestone.value.sort((a, b) => 
+                        new Date(b.updated).getTime() - new Date(a.updated).getTime()
+                    );
+                }
+            }
+        }, {expand: "transaction"}).catch((error) => {
+            console.error("Error subscribing to milestone collection:", error);
         });
     }
 
     stopSync() {
         this.client.collection('transactionAuth').unsubscribe('*');
         this.client.collection('transaction').unsubscribe('*');
+        this.client.collection('milestone').unsubscribe('*');
     }
 }
 
 export default pb.getInstance();
 
-type ExpandTransaction = {
+export type ExpandTransaction = {
     createdby: UsersRecord,
     transaction: TransactionResponse,
     milestone: MilestoneResponse,

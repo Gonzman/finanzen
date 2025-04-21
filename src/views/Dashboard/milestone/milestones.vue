@@ -6,12 +6,12 @@ import pb from '@/lib/pb';
 import { ref, watch, computed, onMounted } from 'vue';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Button from '@/components/ui/button/Button.vue';
-import { type TransactionResponse, TransactionAuthStateOptions, TransactionTypeOptions } from '@/lib/pocketbase-types';
+import { type TransactionResponse} from '@/lib/pocketbase-types';
 import { usePocketBase } from '@/components/usePocketbase';
 import Edit from './modal/edit.vue';
 import Delete from './modal/delete.vue';
+import Details from './modal/details.vue';
 import MilestoneTransactionStats from '@/components/dashboard/MilestoneTransactionStats.vue';
-import TransactionStateIcon from '@/components/dashboard/TransactionStateIcon.vue';
 
 // Define the expanded transaction type
 interface ExpandedTransaction extends TransactionResponse {
@@ -105,7 +105,7 @@ const filteredMilestones = computed(() => {
             <TableRow>
                 <TableHead class="w-[200px]">Title</TableHead>
                 <TableHead>Beschreibung</TableHead>
-                <TableHead>Transaktionen</TableHead>
+                <TableHead>Anzahl Transaktionen</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead class="text-right">Summe</TableHead>
                 <TableHead class="w-0 p-0"></TableHead>
@@ -138,35 +138,9 @@ const filteredMilestones = computed(() => {
                             <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <div class="flex flex-col">
-                                <Edit :milestone="milestone" :committee="committee"></Edit>
-                                <Delete :milestone="milestone"></Delete>
-                            </div>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Transaktionen</DropdownMenuLabel>
-                            <div class="max-h-[200px] overflow-y-auto">
-                                <div v-if="milestoneTransactions[milestone.id] && milestoneTransactions[milestone.id].length > 0">
-                                    <div v-for="transaction in milestoneTransactions[milestone.id]" :key="transaction.id" class="py-1 px-2 hover:bg-muted flex justify-between items-center">
-                                        <div>
-                                            <div class="font-medium flex items-center gap-1">
-                                                <TransactionStateIcon 
-                                                    v-if="transaction.expand && transaction.expand.transactionAuth && transaction.expand.transactionAuth.length > 0"
-                                                    :state="transaction.expand.transactionAuth[0].state || TransactionAuthStateOptions.Ausstehend" 
-                                                    :size="14"
-                                                />
-                                                {{ transaction.title }}
-                                            </div>
-                                            <div class="text-sm text-muted-foreground">
-                                                {{ transaction.amount }} € ({{ transaction.type }})
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <component :is="'remove-transaction'" :transaction="transaction" :milestone="milestone"></component>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div v-else class="py-2 px-2 text-muted-foreground text-sm">
-                                    Keine Transaktionen
-                                </div>
+                                <Details :milestone="milestone" :committee="committee" />
+                                <Edit :milestone="milestone" :committee="committee" />
+                                <Delete :milestone="milestone" />
                             </div>
                         </DropdownMenuContent>
                     </DropdownMenu>

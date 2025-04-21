@@ -4,8 +4,8 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ref, type PropType } from 'vue';
-import type { TransactionResponse } from '@/lib/pocketbase-types';
+import { computed, ref, type PropType } from 'vue';
+import { TransactionTypeOptions, type TransactionResponse } from '@/lib/pocketbase-types';
 import Switch from '@/components/ui/switch/Switch.vue';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
 
@@ -20,7 +20,7 @@ const props = defineProps({
 const title = ref(props.id.title || '');
 const amount = ref(props.id.amount || 0);
 const description = ref(props.id.message || '');
-const ausgabe = ref(false); // Default value for the switch
+const ausgabe = ref(props.id.type === TransactionTypeOptions.Ausgehend); // Default value for the switch
 
 function createTransaction() {  
 
@@ -28,7 +28,7 @@ function createTransaction() {
         title: title.value,
         message: description.value,
         amount: ausgabe.value ? -Math.abs(amount.value) : Math.abs(amount.value),
-        type: ausgabe.value ? 'Ausgehend' : 'Eingehend',
+        type: ausgabe.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,
     }).then(() => {
         console.log('Transaction updated successfully');
     }).catch((error) => {
@@ -37,6 +37,12 @@ function createTransaction() {
 
 }
 
+const hasChanges = computed(() => {
+    return title.value !== props.id.title || 
+           amount.value !== props.id.amount || 
+           description.value !== props.id.message || 
+           ausgabe.value !== (props.id.type === TransactionTypeOptions.Ausgehend);
+});
 
 </script>
 
@@ -67,8 +73,13 @@ function createTransaction() {
         <Textarea :placeholder="id.message || 'Beschreibung'" v-model="description"></Textarea>
 
         <DialogClose as-child>
-
-        <Button :onclick="createTransaction" type="button" variant="default">Erstellen</Button>
+            <Button 
+                @click="createTransaction" 
+                type="button" 
+                variant="default" 
+                :disabled="!hasChanges">
+                {{ hasChanges ? 'Speichern' : 'Keine Änderungen' }}
+            </Button>
         </DialogClose>
     </DialogContent>
 </Dialog>
