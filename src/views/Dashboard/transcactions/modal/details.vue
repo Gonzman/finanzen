@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { type PropType, computed } from 'vue';
 import type { TransactionResponse } from '@/lib/pocketbase-types';
 import { TransactionTypeOptions } from '@/lib/pocketbase-types';

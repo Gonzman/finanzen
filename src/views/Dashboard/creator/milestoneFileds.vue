@@ -113,31 +113,6 @@ const createMilestone = async () => {
             }
         }
 
-        // Handle creating a new transaction if it was filled out
-        if (transactionTab.value === 'new' && transactionTitle.value && transactionAmount.value > 0) {
-            try {
-                // Create transaction
-                const newTransaction = await client.collection('transaction').create({
-                    title: transactionTitle.value,
-                    amount: transactionAmount.value,
-                    message: transactionDescription.value,
-                    type: isExpense.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,
-                    milestone: newMilestone.id,
-                    ausschuss: props.committee.id,
-                    createdby: user.userId,
-                });
-                
-                // Create transaction auth record
-                await client.collection('transactionAuth').create({
-                    transaction: newTransaction.id,
-                    state: 'Ausstehend'
-                });
-                
-                console.log('Transaction created and added to milestone successfully');
-            } catch (error) {
-                console.error('Error creating transaction:', error);
-            }
-        }
 
         resetForm();
     } catch (error) {
@@ -215,7 +190,7 @@ onMounted(() => {
                         </div>
                         <div class="grid gap-2">
                             <Label for="amount">Betrag (€)</Label>
-                            <Input id="amount" type="number" placeholder="0.00" v-model="transactionAmount" />
+                            <Input id="amount" type="number" placeholder="0.00" min="0" inputmode="numeric" v-model="transactionAmount" />
                         </div>
                         <div class="grid gap-2">
                             <Label for="transaction-description">Beschreibung</Label>

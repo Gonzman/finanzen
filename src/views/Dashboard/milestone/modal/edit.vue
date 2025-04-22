@@ -349,7 +349,7 @@ onMounted(() => {
                                 </div>
                                 <div class="grid gap-2">
                                     <Label for="amount">Betrag (€)</Label>
-                                    <Input id="amount" type="number" placeholder="0.00" v-model="transactionAmount" />
+                                    <Input id="amount" type="number" placeholder="0.00" inputmode="numeric" min="0" v-model="transactionAmount" />
                                 </div>
                                 <div class="grid gap-2">
                                     <Label for="transaction-description">Beschreibung</Label>

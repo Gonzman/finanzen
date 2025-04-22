@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vue-tsc && vite build",
+        "build": "vue-tsc && vite build && scp -r ./dist/* offen:./finanzen/public/",
         "preview": "vite preview",
         "generate-types": "bunx pocketbase-typegen --json ./pb_schema.json --out src/lib/pocketbase-types.ts"
     },

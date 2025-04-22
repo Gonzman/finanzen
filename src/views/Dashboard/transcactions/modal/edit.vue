@@ -21,8 +21,14 @@ const title = ref(props.id.title || '');
 const amount = ref(props.id.amount || 0);
 const description = ref(props.id.message || '');
 const ausgabe = ref(props.id.type === TransactionTypeOptions.Ausgehend); // Default value for the switch
+const showAmountError = ref(false);
 
-function createTransaction() {  
+function createTransaction() {
+    if (amount.value <= 0) {
+        showAmountError.value = true;
+        return;
+    }
+    showAmountError.value = false;  
 
     usePocketBase().collection('transaction').update(props.id.id, {
         title: title.value,
@@ -34,7 +40,6 @@ function createTransaction() {
     }).catch((error) => {
         console.error('Error updating transaction:', error);
     });
-
 }
 
 const hasChanges = computed(() => {
@@ -42,6 +47,10 @@ const hasChanges = computed(() => {
            amount.value !== props.id.amount || 
            description.value !== props.id.message || 
            ausgabe.value !== (props.id.type === TransactionTypeOptions.Ausgehend);
+});
+
+const isValid = computed(() => {
+    return amount.value > 0;
 });
 
 </script>
@@ -68,7 +77,17 @@ const hasChanges = computed(() => {
         <Input :placeholder="id.title || 'Titel'" v-model="title" />
 
         <Label>Betrag</Label>
-        <Input :placeholder="id.amount || 'Betrag'" v-model="amount" type="number" />
+        <Input 
+            :placeholder="id.amount || 'Betrag'" 
+            v-model="amount" 
+            type="number" 
+            inputmode="numeric"
+            min="0.01" 
+            step="0.01"
+            @input="showAmountError = false"
+        />
+        <div v-if="showAmountError" class="text-red-500 text-sm">Betrag muss größer als 0 sein</div>
+        
         <Label>Beschreibung</Label>
         <Textarea :placeholder="id.message || 'Beschreibung'" v-model="description"></Textarea>
 
@@ -77,7 +96,7 @@ const hasChanges = computed(() => {
                 @click="createTransaction" 
                 type="button" 
                 variant="default" 
-                :disabled="!hasChanges">
+                :disabled="!hasChanges || !isValid">
                 {{ hasChanges ? 'Speichern' : 'Keine Änderungen' }}
             </Button>
         </DialogClose>

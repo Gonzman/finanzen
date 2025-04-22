@@ -181,14 +181,19 @@ class pb {
                     }
                 }
             } else if (e.action === 'create') {
-                // If the record matches our current filter (if any), add it
-                const currentAusschuss = this.getCurrentAusschuss();
-                if (!currentAusschuss || (e.record.expand?.transaction?.ausschuss === currentAusschuss)) {
-                    this.transaction.value.push(e.record);
-                    // Sort the array to maintain the ordering
-                    this.transaction.value.sort((a, b) => 
-                        new Date(b.updated).getTime() - new Date(a.updated).getTime()
-                    );
+                // Check if the transaction already exists in our array
+                const exists = this.transaction.value.some(item => item.id === e.record.id);
+                
+                // Only add if it doesn't already exist and matches our current filter (if any)
+                if (!exists) {
+                    const currentAusschuss = this.getCurrentAusschuss();
+                    if (!currentAusschuss || (e.record.expand?.transaction?.ausschuss === currentAusschuss)) {
+                        this.transaction.value.push(e.record);
+                        // Sort the array to maintain the ordering
+                        this.transaction.value.sort((a, b) => 
+                            new Date(b.updated).getTime() - new Date(a.updated).getTime()
+                        );
+                    }
                 }
             }
         }, {expand: "createdby, transaction"}).catch((error) => {
@@ -234,14 +239,19 @@ class pb {
                     }
                 }
             } else if (e.action === 'create') {
-                // If the record matches our current filter (if any), add it
-                const currentAusschuss = this.getCurrentAusschuss();
-                if (!currentAusschuss || (e.record.ausschuss === currentAusschuss)) {
-                    this.milestone.value.push(e.record);
-                    // Sort the array to maintain the ordering
-                    this.milestone.value.sort((a, b) => 
-                        new Date(b.updated).getTime() - new Date(a.updated).getTime()
-                    );
+                // Check if the milestone already exists in our array
+                const exists = this.milestone.value.some(item => item.id === e.record.id);
+                
+                // Only add if it doesn't already exist and matches our current filter (if any)
+                if (!exists) {
+                    const currentAusschuss = this.getCurrentAusschuss();
+                    if (!currentAusschuss || (e.record.ausschuss === currentAusschuss)) {
+                        this.milestone.value.push(e.record);
+                        // Sort the array to maintain the ordering
+                        this.milestone.value.sort((a, b) => 
+                            new Date(b.updated).getTime() - new Date(a.updated).getTime()
+                        );
+                    }
                 }
             }
         }, {expand: "transaction"}).catch((error) => {

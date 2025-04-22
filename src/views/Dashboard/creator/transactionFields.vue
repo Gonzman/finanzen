@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
 import { TransactionTypeOptions, } from '@/lib/pocketbase-types';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     committee: {
@@ -21,13 +21,18 @@ const title = ref('');
 const description = ref("");
 const amount = ref(0);
 const ausgabe = ref(false);
+const showAmountError = ref(false);
 
 const user = useUser();
 const pocketbase = usePocketBase();
 
 function createTransaction() {
     if (title.value.length < 1) return;
-    if (amount.value < 1) return;
+    if (amount.value <= 0) {
+        showAmountError.value = true;
+        return;
+    }
+    showAmountError.value = false;
 
     const data = {
         title: title.value,
@@ -47,6 +52,9 @@ function createTransaction() {
     });
 }
 
+const isValid = computed(() => {
+    return title.value.length > 0 && amount.value > 0;
+});
 
 </script>
 
@@ -60,13 +68,22 @@ function createTransaction() {
         <Input placeholder="Titel" v-model="title" />
 
         <Label>Betrag</Label>
-        <Input placeholder="Betrag" v-model="amount" type="number" />
+        <Input 
+            placeholder="Betrag" 
+            v-model="amount" 
+            inputmode="numeric"
+            type="number" 
+            min="0.01" 
+            step="0.01" 
+            @input="showAmountError = false"
+        />
+        <div v-if="showAmountError" class="text-red-500 text-sm">Betrag muss größer als 0 sein</div>
+        
         <Label>Beschreibung</Label>
         <Textarea placeholder="Beschreibung" v-model="description"></Textarea>
 
         <DialogClose as-child>
-
-        <Button :onclick="createTransaction" type="button" variant="default">Erstellen</Button>
+            <Button :onclick="createTransaction" type="button" variant="default" :disabled="!isValid">Erstellen</Button>
         </DialogClose>
     </div>
 </template>

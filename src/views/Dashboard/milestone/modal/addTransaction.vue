@@ -37,6 +37,7 @@ const title = ref('');
 const amount = ref(0);
 const description = ref('');
 const isExpense = ref(false); // If true, this is an outgoing transaction
+const showAmountError = ref(false);
 
 // Fetch transactions that aren't already assigned to this milestone
 const fetchAvailableTransactions = async () => {
@@ -80,12 +81,17 @@ const addExistingTransactions = async () => {
 
 // Create a new transaction and associate it with the milestone
 const createNewTransaction = async () => {
+    if (amount.value <= 0) {
+        showAmountError.value = true;
+        return;
+    }
+    
     isLoading.value = true;
     try {
         // Create transaction
         const newTransaction = await client.collection('transaction').create({
             title: title.value,
-            amount: amount.value,
+            amount: isExpense.value ? -Math.abs(amount.value) : Math.abs(amount.value),
             message: description.value,
             type: isExpense.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,
             milestone: props.milestone.id,
@@ -113,6 +119,7 @@ const resetForm = () => {
     amount.value = 0;
     description.value = '';
     isExpense.value = false;
+    showAmountError.value = false;
 };
 
 const toggleSelection = (id: string) => {
@@ -205,7 +212,8 @@ onMounted(() => {
                         </div>
                         <div class="grid gap-2">
                             <Label for="amount">Betrag (€)</Label>
-                            <Input id="amount" type="number" placeholder="0.00" v-model="amount" />
+                            <Input id="amount" type="number" placeholder="0.00" v-model="amount" :min="0" />
+                            <p v-if="showAmountError" class="text-red-500 text-sm">Der Betrag muss größer als 0 sein.</p>
                         </div>
                         <div class="grid gap-2">
                             <Label for="description">Beschreibung</Label>
