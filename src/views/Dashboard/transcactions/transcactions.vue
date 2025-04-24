@@ -96,12 +96,11 @@ const formatTransaction = (amount: number, type: string) => {
             {{ invoice.expand?.transaction.type }}
           </span>
         </TableCell>
-        <TableCell>{{ invoice.expand?.milestone?.title ?? "/" }}</TableCell>
+        <TableCell>{{ invoice.expand?.transaction?.expand?.milestone?.title ?? "/" }}</TableCell>
         <TableCell class="text-right">
           <div class="flex items-center justify-end" :class="invoice.expand!.transaction.amount < 0 ? 'text-red-500' : 'text-green-500'">
             {{ formatTransaction(invoice.expand!.transaction.amount, invoice.expand!.transaction.type).formattedAmount
             }}
-
           </div>
         </TableCell>
         <TableCell class="text-right w-0 p-0">

@@ -66,7 +66,7 @@ class pb {
 
     getTransaction(ausschuss: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-            expand: "createdby, transaction ",
+            expand: "createdby, transaction, transaction.milestone",
             sort: "-updated", 
             filter: `transaction.ausschuss = "${ausschuss}"`
         }).then((result) => {
@@ -196,7 +196,7 @@ class pb {
                     }
                 }
             }
-        }, {expand: "createdby, transaction"}).catch((error) => {
+        }, {expand: "createdby, transaction, transaction.milestone"}).catch((error) => {
             console.error("Error subscribing to transactionAuth collection:", error);
         });
 
