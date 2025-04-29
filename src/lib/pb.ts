@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { TransactionAuthStateOptions, type AusschussResponse, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord } from "./pocketbase-types";
+import { TransactionAuthStateOptions, type AusschussResponse, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord, type UsersResponse } from "./pocketbase-types";
 import { usePocketBase } from "@/components/usePocketbase";
 
 class pb {
@@ -36,7 +36,7 @@ class pb {
         } else {
             // If no specific ausschuss, fetch all transactions
             return this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                expand: "createdby, transaction",
+                expand: "transaction.createdby, transaction",
                 sort: "-updated"
             }).then((result) => {
                 this.transaction.value = result;
@@ -66,7 +66,7 @@ class pb {
 
     getTransaction(ausschuss: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-            expand: "createdby, transaction, transaction.milestone",
+            expand: "transaction.createdby, transaction, transaction.milestone",
             sort: "-updated", 
             filter: `transaction.ausschuss = "${ausschuss}"`
         }).then((result) => {
@@ -78,7 +78,7 @@ class pb {
     // New method to get transactions for a specific milestone
     getMilestoneTransactions(milestoneId: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-            expand: "createdby, transaction",
+            expand: "transaction.createdby, transaction",
             sort: "-updated", 
             filter: `transaction.milestone = "${milestoneId}"`
         }).then((result) => {
@@ -100,7 +100,7 @@ class pb {
             // Get all authorized transactions
             const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
-                expand: "createdby, transaction",
+                expand: "transaction.createdby, transaction",
                 filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
@@ -112,7 +112,7 @@ class pb {
             // Get all "In Bearbeitung" transactions
             const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
-                expand: "createdby, transaction",
+                expand: "transaction.createdby, transaction",
                 filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions["In Bearbeitung"]}"`
             });
 
@@ -132,7 +132,7 @@ class pb {
             // Get all authorized transactions
             const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
-                expand: "createdby, transaction",
+                expand: "transaction.createdby, transaction",
                 filter: `state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
@@ -144,7 +144,7 @@ class pb {
             // Get all "In Bearbeitung" transactions
             const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
-                expand: "createdby, transaction",
+                expand: "transaction.createdby, transaction",
                 filter: `state = "${TransactionAuthStateOptions["In Bearbeitung"]}"`
             });
 
@@ -196,7 +196,7 @@ class pb {
                     }
                 }
             }
-        }, {expand: "createdby, transaction, transaction.milestone"}).catch((error) => {
+        }, {expand: "transaction.createdby, transaction, transaction.milestone"}).catch((error) => {
             console.error("Error subscribing to transactionAuth collection:", error);
         });
 
@@ -214,7 +214,7 @@ class pb {
                     if (this.transaction.value[i].expand?.transaction?.id === e.record.id) {
                         // Update the transaction data directly
                         if (this.transaction.value[i].expand) {
-                            this.transaction.value[i].expand!.transaction = e.record;
+                            this.transaction.value[i].expand!.transaction = e.record as TransactionResponse<ExpandTransactionMilestone>;
                         }
                     }
                 }
@@ -269,10 +269,14 @@ class pb {
 export default pb.getInstance();
 
 export type ExpandTransaction = {
-    createdby: UsersRecord,
-    transaction: TransactionResponse,
-    milestone: MilestoneResponse,
+    transaction: TransactionResponse<ExpandTransactionMilestone>,
 }
+
+export type ExpandTransactionMilestone = {
+    milestone: MilestoneResponse,
+    createdby: UsersResponse,
+}
+
 
 type ExpandTransactionCommittee = {
     ausschuss: AusschussResponse,

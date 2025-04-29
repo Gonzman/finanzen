@@ -10,3 +10,18 @@ onRecordAfterCreateSuccess((e) => {
     $app.save(record)
     e.next()
 }, "transaction")
+
+
+onRecordUpdateRequest((e) => {
+    // Get the acceptedby field value
+    const acceptedby = e.record.get("acceptedby");
+    console.log("Accepted by:", acceptedby);
+    
+    // Check if acceptedby is an array and has 2 or more entries
+    if (Array.isArray(acceptedby) && acceptedby.length >= 2) {
+        // Update the state to "Autorisiert"
+        e.record.set("state", "Autorisiert");
+    }
+    
+    e.next();
+}, "transactionAuth")

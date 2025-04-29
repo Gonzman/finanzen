@@ -4,11 +4,11 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTr
 import { type PropType, computed } from 'vue';
 import type { TransactionResponse } from '@/lib/pocketbase-types';
 import { TransactionTypeOptions } from '@/lib/pocketbase-types';
-import { useUser } from '@/components/usePocketbase';
+import type { ExpandTransactionMilestone } from '@/lib/pb';
 
 const props = defineProps({
     id: {
-        type: Object as PropType<TransactionResponse>,
+        type: Object as PropType<TransactionResponse<ExpandTransactionMilestone>>,
         required: true,
     },
 });
@@ -46,7 +46,7 @@ const transactionData = computed(() => {
 <template>
     <Dialog>
     <DialogTrigger asChild>
-    <Button variant="ghost" class="text-left w-fulls justify-start" :disabled="!(props.id.createdby === useUser().userId)">
+    <Button variant="ghost" class="text-left w-fulls justify-start">
         Details anzeigen
     </Button>
     </DialogTrigger>
@@ -74,6 +74,11 @@ const transactionData = computed(() => {
             <div class="flex justify-between">
                 <span class="text-sm text-muted-foreground">Erstellt am</span>
                 <span class="text-sm">{{ new Date(props.id.created).toLocaleDateString('de-DE') }}</span>
+            </div>
+
+            <div class="flex justify-between">
+                <span class="text-sm text-muted-foreground">Erstellt von</span>
+                <span class="text-sm">{{ props.id.expand?.createdby.name ?? props.id.expand?.createdby?.email }}</span>
             </div>
             
             <div v-if="props.id.message" class="mt-2">

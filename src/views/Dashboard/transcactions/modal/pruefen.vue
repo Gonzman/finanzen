@@ -33,7 +33,7 @@
         </Select>
 
         <div class="flex items-center space-x-2 pt-4">
-            <p>Autoresieren? <Switch v-model="auth" /></p>
+            <p>Autorisieren? <Switch v-model="auth" /></p>
         </div>
 
         <div class="flex justify-end space-x-2 pt-4">
@@ -80,26 +80,20 @@ function pruefen() {
         stateT = TransactionAuthStateOptions['In Bearbeitung'];
     }
 
+    
     if (auth.value != props.id.acceptedby.includes(useUser().userId) && state.value == TransactionAuthStateOptions['Autorisiert']) {
         stateT = TransactionAuthStateOptions['In Bearbeitung'];
     }
-
-    if (!auth.value && state.value === TransactionAuthStateOptions['Autorisiert']) {
-        auth.value = true;
-    }
-
-
+    
 
     let data;
     if (auth.value) {
         data = {
-            id: props.id.id,
             state: stateT,
             "acceptedby+": useUser().userId,
         };
     } else {
         data = {
-            id: props.id.id,
             state: stateT,
             "acceptedby-": useUser().userId,
         };
