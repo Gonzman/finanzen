@@ -11,7 +11,7 @@ import Edit from './modal/edit.vue';
 import Delete from './modal/delete.vue';
 import Pruefen from './modal/pruefen.vue';
 import Details from './modal/details.vue';
-import { TransactionTypeOptions } from '@/lib/pocketbase-types';
+import { TransactionAuthStateOptions, TransactionTypeOptions } from '@/lib/pocketbase-types';
 import TransactionStateIcon from '@/components/dashboard/TransactionStateIcon.vue';
 
 const props = defineProps({
@@ -115,9 +115,9 @@ const formatTransaction = (amount: number, type: string) => {
               <DropdownMenuSeparator />
               <div class="flex flex-col">
                 <Pruefen :id="invoice" v-if="useUser().isPruefer()" />
-                <Edit :id="invoice.expand!.transaction" />
-                <Delete :id="invoice.expand!.transaction" />
-                <DropdownMenuSeparator />
+                <Edit :id="invoice" v-if="invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgeschlossen" />
+                <Delete :id="invoice.expand!.transaction" v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert" />
+                <DropdownMenuSeparator v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert" />
                 <Details :id="invoice.expand!.transaction">Details anzeigen</Details>
               </div>
             </DropdownMenuContent>

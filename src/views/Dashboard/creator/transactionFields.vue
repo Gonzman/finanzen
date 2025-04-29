@@ -20,7 +20,7 @@ const props = defineProps({
 const title = ref('');
 const description = ref("");
 const amount = ref(0);
-const ausgabe = ref(false);
+const ausgabe = ref(true);
 const showAmountError = ref(false);
 
 const user = useUser();

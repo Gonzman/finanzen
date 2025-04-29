@@ -5,22 +5,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { computed, ref, type PropType } from 'vue';
-import { TransactionTypeOptions, type TransactionResponse } from '@/lib/pocketbase-types';
+import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse, type TransactionResponse } from '@/lib/pocketbase-types';
 import Switch from '@/components/ui/switch/Switch.vue';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
+import type { ExpandTransaction } from '@/lib/pb';
 
 const props = defineProps({
     id: {
-        type: Object as PropType<TransactionResponse>,
+        type: Object as PropType<TransactionAuthResponse<ExpandTransaction>>,
         required: true,
     },
 });
 
 // Define reactive variables for v-model
-const title = ref(props.id.title || '');
-const amount = ref(props.id.amount || 0);
-const description = ref(props.id.message || '');
-const ausgabe = ref(props.id.type === TransactionTypeOptions.Ausgehend); // Default value for the switch
+const title = ref(props.id.expand?.transaction.title || '');
+const amount = ref(props.id.expand?.transaction.amount || 0);
+const description = ref(props.id.expand?.transaction.message || '');
+const ausgabe = ref(props.id.expand?.transaction.type === TransactionTypeOptions.Ausgehend); // Default value for the switch
 const showAmountError = ref(false);
 
 function createTransaction() {
@@ -43,10 +44,10 @@ function createTransaction() {
 }
 
 const hasChanges = computed(() => {
-    return title.value !== props.id.title || 
-           amount.value !== props.id.amount || 
-           description.value !== props.id.message || 
-           ausgabe.value !== (props.id.type === TransactionTypeOptions.Ausgehend);
+    return title.value !== props.id.expand?.transaction.title || 
+           amount.value !== props.id.expand.transaction.amount || 
+           description.value !== props.id.expand?.transaction.message || 
+           ausgabe.value !== (props.id.expand?.transaction.type === TransactionTypeOptions.Ausgehend);
 });
 
 const isValid = computed(() => {
@@ -58,7 +59,10 @@ const isValid = computed(() => {
 <template>
     <Dialog>
     <DialogTrigger asChild>
-    <Button variant="ghost" class="text-left w-fulls justify-start" :disabled="!(props.id.createdby === useUser().userId)">
+    <Button variant="ghost" class="text-left w-fulls justify-start" :disabled="!props.id.expand?.transaction?.createdby || 
+                  props.id.expand.transaction.createdby !== useUser().userId || 
+                  props.id.state === TransactionAuthStateOptions.Autorisiert || 
+                  props.id.state === TransactionAuthStateOptions.Abgeschlossen">
         Bearbeiten
     </Button>
     </DialogTrigger>
@@ -74,11 +78,11 @@ const isValid = computed(() => {
             
         </div>
         <Label>Titel</Label>
-        <Input :placeholder="id.title || 'Titel'" v-model="title" />
+        <Input :placeholder="id.expand?.transaction.title || 'Titel'" v-model="title" />
 
         <Label>Betrag</Label>
         <Input 
-            :placeholder="id.amount || 'Betrag'" 
+            :placeholder="id.expand?.transaction.amount || 'Betrag'" 
             v-model="amount" 
             type="number" 
             inputmode="numeric"
@@ -89,7 +93,7 @@ const isValid = computed(() => {
         <div v-if="showAmountError" class="text-red-500 text-sm">Betrag muss größer als 0 sein</div>
         
         <Label>Beschreibung</Label>
-        <Textarea :placeholder="id.message || 'Beschreibung'" v-model="description"></Textarea>
+        <Textarea :placeholder="id.expand?.transaction.message || 'Beschreibung'" v-model="description"></Textarea>
 
         <DialogClose as-child>
             <Button 
