@@ -32,21 +32,19 @@ const isLoading = ref(false);
 const selectedTransactionIds = ref<string[]>([]);
 const mode = ref('existing');
 
-// New transaction form
 const title = ref('');
 const amount = ref(0);
 const description = ref('');
-const isExpense = ref(false); // If true, this is an outgoing transaction
+const isExpense = ref(false);
 const showAmountError = ref(false);
 
-// Fetch transactions that aren't already assigned to this milestone
 const fetchAvailableTransactions = async () => {
     isLoading.value = true;
     try {
         const result = await client.collection('transaction').getFullList({
             filter: `ausschuss = "${props.committee.id}" && (milestone = null || milestone = "")`,
             sort: '-created',
-        });
+        }); //FIXME: no fetch
         
         transactions.value = result;
         console.log('Available transactions:', result);
@@ -58,13 +56,11 @@ const fetchAvailableTransactions = async () => {
     }
 };
 
-// Add selected transactions to the milestone
 const addExistingTransactions = async () => {
     if (selectedTransactionIds.value.length === 0) return;
     
     isLoading.value = true;
     try {
-        // Update each selected transaction to reference this milestone
         for (const transactionId of selectedTransactionIds.value) {
             await client.collection('transaction').update(transactionId, {
                 milestone: props.milestone.id
@@ -79,7 +75,6 @@ const addExistingTransactions = async () => {
     }
 };
 
-// Create a new transaction and associate it with the milestone
 const createNewTransaction = async () => {
     if (amount.value <= 0) {
         showAmountError.value = true;
@@ -88,7 +83,6 @@ const createNewTransaction = async () => {
     
     isLoading.value = true;
     try {
-        // Create transaction
         const newTransaction = await client.collection('transaction').create({
             title: title.value,
             amount: isExpense.value ? -Math.abs(amount.value) : Math.abs(amount.value),
@@ -99,7 +93,6 @@ const createNewTransaction = async () => {
             createdby: user.userId,
         });
         
-        // Create transaction auth record
         await client.collection('transactionAuth').create({
             transaction: newTransaction.id,
             state: 'Ausstehend'

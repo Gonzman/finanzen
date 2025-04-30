@@ -22,11 +22,9 @@ const props = defineProps({
     },
 });
 
-// Define reactive variables for existing transactions
 const transactions = pb.getMilestoneTransactions(props.milestone.id);
 const isLoading = ref(false);
 
-// Function to refresh transactions when a new one is added
 const refreshTransactions = async () => {
     isLoading.value = true;
     try {
@@ -38,11 +36,9 @@ const refreshTransactions = async () => {
     }
 };
 
-// Get properly typed transaction objects for the MilestoneTransactionStats component
-const transactionObjects = computed((): TransactionResponse[] => {
-    return transactions.value
-        .map(t => t.expand?.transaction)
-        .filter((t): t is TransactionResponse => t !== undefined);
+const transactionObjects = computed((): TransactionAuthResponse<ExpandTransaction>[] => {
+    return transactions.value.filter((t): t is TransactionAuthResponse<ExpandTransaction> => 
+        t.expand?.transaction !== undefined);
 });
 
 // Calculate total amount for the milestone
@@ -93,7 +89,7 @@ const totalAmount = computed((): number => {
                         <div class="text-sm text-muted-foreground mb-1">Status</div>
                         <MilestoneTransactionStats 
                             :milestoneId="props.milestone.id" 
-                            :transactions="transactionObjects"
+                            :transactions="transactionObjects.map(t => t.expand!.transaction)"
                         />
                     </div>
                 </div>

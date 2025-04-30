@@ -13,16 +13,13 @@ const props = defineProps({
     },
 });
 
-// Compute style and text for the transaction avatar
 const transactionData = computed(() => {
     const amount = props.id.amount;
     const isIncoming = props.id.type === TransactionTypeOptions.Eingehend;
     
-    // Calculate background color based on transaction type
     const bgColor = isIncoming ? 'bg-green-100' : 'bg-red-100';
     const textColor = isIncoming ? 'text-green-700' : 'text-red-700';
     
-    // Format amount for display
     const formattedAmount = new Intl.NumberFormat('de-DE', {
         style: 'currency',
         currency: 'EUR',
@@ -30,7 +27,6 @@ const transactionData = computed(() => {
         maximumFractionDigits: 0
     }).format(amount);
     
-    // Create short display for avatar fallback (e.g., "€50" or "-€50")
     const shortDisplay = isIncoming ? `+${amount}€` : `-${amount}€`;
     
     return {
@@ -55,7 +51,6 @@ const transactionData = computed(() => {
         <DialogTitle>Transaktion</DialogTitle>
     </DialogHeader>
     <div class="flex flex-col space-y-4">
-        <!-- Transaction Avatar - similar to UserNav Avatar -->
         <div class="flex items-center space-x-4">
  
             <div>
@@ -68,8 +63,7 @@ const transactionData = computed(() => {
                 </span>
             </div>
         </div>
-        
-        <!-- Transaction Details -->
+    
         <div class="space-y-2">
             <div class="flex justify-between">
                 <span class="text-sm text-muted-foreground">Erstellt am</span>

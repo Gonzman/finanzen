@@ -18,7 +18,6 @@ class pb {
         return pb.instance;
     }
 
-    // Get the current ausschuss filter from the transaction data if available
     private getCurrentAusschuss(): string | null {
         if (this.transaction.value.length > 0 && this.transaction.value[0].expand?.transaction?.ausschuss) {
             return this.transaction.value[0].expand.transaction.ausschuss;
@@ -26,15 +25,12 @@ class pb {
         return null;
     }
 
-    // Refresh transactions with the current filter
     refreshTransactions(ausschuss?: string) {
-        // If we have a current filter (ausschuss), use it
         const currentAusschuss = ausschuss || this.getCurrentAusschuss();
         
         if (currentAusschuss) {
             return this.getTransaction(currentAusschuss);
         } else {
-            // If no specific ausschuss, fetch all transactions
             return this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 expand: "transaction.createdby, transaction",
                 sort: "-updated"
@@ -45,15 +41,12 @@ class pb {
         }
     }
     
-    // Refresh milestones with the current filter
     refreshMilestones(ausschuss?: string) {
-        // If we have a current filter (ausschuss), use it
         const currentAusschuss = ausschuss || this.getCurrentAusschuss();
         
         if (currentAusschuss) {
             return this.getMilestone(currentAusschuss);
         } else {
-            // If no specific ausschuss, fetch all milestones
             return this.client.collection('milestone').getFullList<MilestoneResponse<ExpandMilestones>>({
                 expand: "transaction",
                 sort: "-updated"
@@ -75,7 +68,6 @@ class pb {
         return this.transaction;
     }
 
-    // New method to get transactions for a specific milestone
     getMilestoneTransactions(milestoneId: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
             expand: "transaction.createdby, transaction",
@@ -97,26 +89,22 @@ class pb {
     async getBudget(ausschuss: string): Promise<number> {
         let budget = 0;
         try {
-            // Get all authorized transactions
             const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "transaction.createdby, transaction",
                 filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
-            // Simply add all authorized transaction amounts (they already have the correct sign)
             for (const item of authorizedResult) {
                 budget += item.expand?.transaction.amount ?? 0;
             }
             
-            // Get all "In Bearbeitung" transactions
             const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "transaction.createdby, transaction",
                 filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions["In Bearbeitung"]}"`
             });
 
-            // Add all "In Bearbeitung" transaction amounts (they already have the correct sign)
             for (const item of inProgressResult) {
                 budget += item.expand?.transaction.amount ?? 0;
             }
@@ -129,26 +117,22 @@ class pb {
     async overAllBudget(): Promise<number> {
         let budget = 0;
         try {
-            // Get all authorized transactions
             const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "transaction.createdby, transaction",
                 filter: `state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
-            // Simply add all authorized transaction amounts (they already have the correct sign)
             for (const item of authorizedResult) {
                 budget += item.expand?.transaction.amount ?? 0;
             }
             
-            // Get all "In Bearbeitung" transactions
             const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "transaction.createdby, transaction",
                 filter: `state = "${TransactionAuthStateOptions["In Bearbeitung"]}"`
             });
 
-            // Add all "In Bearbeitung" transaction amounts (they already have the correct sign)
             for (const item of inProgressResult) {
                 budget += item.expand?.transaction.amount ?? 0;
             }
@@ -171,25 +155,20 @@ class pb {
             } else if (e.action === 'update') {
                 const index = this.transaction.value.findIndex((item) => item.id === e.record.id);
                 if (index !== -1) {
-                    // Update the record with the new data directly from subscription
                     this.transaction.value[index] = e.record;
                 } else {
-                    // If the record matches our current filter (if any), add it
                     const currentAusschuss = this.getCurrentAusschuss();
                     if (!currentAusschuss || (e.record.expand?.transaction?.ausschuss === currentAusschuss)) {
                         this.transaction.value.push(e.record);
                     }
                 }
             } else if (e.action === 'create') {
-                // Check if the transaction already exists in our array
                 const exists = this.transaction.value.some(item => item.id === e.record.id);
                 
-                // Only add if it doesn't already exist and matches our current filter (if any)
                 if (!exists) {
                     const currentAusschuss = this.getCurrentAusschuss();
                     if (!currentAusschuss || (e.record.expand?.transaction?.ausschuss === currentAusschuss)) {
                         this.transaction.value.push(e.record);
-                        // Sort the array to maintain the ordering
                         this.transaction.value.sort((a, b) => 
                             new Date(b.updated).getTime() - new Date(a.updated).getTime()
                         );
@@ -203,24 +182,18 @@ class pb {
         this.client.collection('transaction').subscribe<TransactionResponse>('*', (e) => {
             console.log('Transaction update:', e);
             if (e.action === 'delete') {
-                // Remove any transactionAuth records that reference this transaction
-                // This is more efficient than refetching everything
                 this.transaction.value = this.transaction.value.filter(
                     item => item.expand?.transaction?.id !== e.record.id
                 );
             } else if (e.action === 'update') {
-                // Update transaction data in any transactionAuth records that reference it
                 for (let i = 0; i < this.transaction.value.length; i++) {
                     if (this.transaction.value[i].expand?.transaction?.id === e.record.id) {
-                        // Update the transaction data directly
                         if (this.transaction.value[i].expand) {
                             this.transaction.value[i].expand!.transaction = e.record as TransactionResponse<ExpandTransactionMilestone>;
                         }
                     }
                 }
             }
-            // No need to handle 'create' for base transaction as it doesn't appear in lists until
-            // a transactionAuth record references it
         });
         
         this.client.collection('milestone').subscribe<MilestoneResponse<ExpandMilestones>>('*', (e) => {
@@ -232,22 +205,18 @@ class pb {
                 if (index !== -1) {
                     this.milestone.value[index] = e.record;
                 } else {
-                    // If the record matches our current filter (if any), add it
                     const currentAusschuss = this.getCurrentAusschuss();
                     if (!currentAusschuss || (e.record.ausschuss === currentAusschuss)) {
                         this.milestone.value.push(e.record);
                     }
                 }
             } else if (e.action === 'create') {
-                // Check if the milestone already exists in our array
                 const exists = this.milestone.value.some(item => item.id === e.record.id);
                 
-                // Only add if it doesn't already exist and matches our current filter (if any)
                 if (!exists) {
                     const currentAusschuss = this.getCurrentAusschuss();
                     if (!currentAusschuss || (e.record.ausschuss === currentAusschuss)) {
                         this.milestone.value.push(e.record);
-                        // Sort the array to maintain the ordering
                         this.milestone.value.sort((a, b) => 
                             new Date(b.updated).getTime() - new Date(a.updated).getTime()
                         );

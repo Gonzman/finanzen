@@ -25,7 +25,6 @@ const mode = ref<'remove' | 'delete'>('remove');
 const removeTransaction = async () => {
     isProcessing.value = true;
     try {
-        // Update transaction to remove milestone reference
         await client.collection('transaction').update(props.transaction.id, {
             milestone: null
         });
@@ -41,7 +40,6 @@ const removeTransaction = async () => {
 const deleteTransaction = async () => {
     isProcessing.value = true;
     try {
-        // First find and delete any transaction auth records
         const authRecords = await client.collection('transactionAuth').getFullList({
             filter: `transaction = "${props.transaction.id}"`,
         });
@@ -50,7 +48,6 @@ const deleteTransaction = async () => {
             await client.collection('transactionAuth').delete(record.id);
         }
         
-        // Then delete the transaction
         await client.collection('transaction').delete(props.transaction.id);
         
         console.log('Transaction deleted successfully');

@@ -19,35 +19,30 @@ const props = defineProps({
     },
 });
 
-// Define reactive variables for milestone
 const title = ref('');
 const description = ref('');
 
-// Define reactive variables for transactions tab
 const transactionTab = ref('new');
 
-// Define reactive variables for existing transactions
 const isLoading = ref(false);
 const selectedTransactionIds = ref<string[]>([]);
 const availableTransactions = ref<TransactionResponse[]>([]);
 
-// Define reactive variables for new transaction
 const transactionTitle = ref('');
 const transactionAmount = ref(0);
 const transactionDescription = ref('');
-const isExpense = ref(false); // If true, this is an outgoing transaction
+const isExpense = ref(false); 
 
 const client = usePocketBase();
 const user = useUser();
 
-// Fetch available transactions that aren't assigned to any milestone
 const fetchAvailableTransactions = async () => {
     isLoading.value = true;
     try {
         const result = await client.collection('transaction').getFullList({
             filter: `ausschuss = "${props.committee.id}" && (milestone = null || milestone = "")`,
             sort: '-created',
-        });
+        }); //FIXME: no fetch
         
         availableTransactions.value = result;
     } catch (error) {
@@ -89,7 +84,6 @@ const createMilestone = async () => {
     if (!title.value) return;
 
     try {
-        // Create milestone
         const newMilestone = await client.collection('milestone').create({
             title: title.value,
             message: description.value,
@@ -99,7 +93,6 @@ const createMilestone = async () => {
 
         console.log('Milestone created successfully');
 
-        // Handle adding existing transactions if any are selected
         if (selectedTransactionIds.value.length > 0) {
             try {
                 for (const transactionId of selectedTransactionIds.value) {
@@ -177,7 +170,6 @@ onMounted(() => {
                     </div>
                 </TabsContent>
                 
-                <!-- Create new transaction tab -->
                 <TabsContent value="new">
                     <div class="grid gap-4 py-2">
                         <div class="flex items-center gap-2">

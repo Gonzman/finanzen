@@ -131,6 +131,7 @@ export enum TransactionAuthStateOptions {
 	"Autorisiert" = "Autorisiert",
 	"Abgeschlossen" = "Abgeschlossen",
 	"Fehlgeschlagen" = "Fehlgeschlagen",
+	"Abgelehnt" = "Abgelehnt",
 }
 export type TransactionAuthRecord = {
 	accepted?: boolean

@@ -6,8 +6,6 @@ import type {
 import PocketBase from 'pocketbase';
 import { ref, type Ref } from 'vue';
 
-// Init the PocketBase instance with the correct URL.
-// By setting this in a .env file you can easily switch between development and production environments
 const client = new PocketBase(
     import.meta.env.VITE_POCKETBASE_URL,
 ) as TypedPocketBase;
@@ -15,7 +13,6 @@ const client = new PocketBase(
 client.autoCancellation(false);
 
 client.authStore.onChange(() => {
-    // Save the auth store to local storage
     window.location.reload();
     if (client.authStore.isValid) {
         User.getInstance();
@@ -56,7 +53,7 @@ class User {
             })
             .catch(error => {
                 console.error('Error fetching user record:', error);
-                throw error; // Rethrow the error to be handled by the caller
+                throw error;
             });
 
         client
@@ -69,7 +66,7 @@ class User {
             })
             .catch(error => {
                 console.error('Error fetching comitte data:', error);
-                throw error; // Rethrow the error to be handled by the caller
+                throw error;
             });
     }
 
@@ -122,7 +119,6 @@ class User {
         return this.image.value;
     }
 
-    // Added a getter for the id property to make it accessible
     get userId() {
         return this.id;
     }
@@ -148,7 +144,6 @@ function shortName(name: string) {
     if (match) {
         return match[1].toUpperCase() + match[2].toUpperCase();
     } else {
-        // If it doesn't match the pattern, return the full name or a default value
         return name || 'Unknown';
     }
 }

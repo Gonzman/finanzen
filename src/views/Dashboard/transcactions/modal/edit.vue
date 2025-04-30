@@ -17,7 +17,6 @@ const props = defineProps({
     },
 });
 
-// Define reactive variables for v-model
 const title = ref(props.id.expand?.transaction.title || '');
 const amount = ref(props.id.expand?.transaction.amount || 0);
 const description = ref(props.id.expand?.transaction.message || '');

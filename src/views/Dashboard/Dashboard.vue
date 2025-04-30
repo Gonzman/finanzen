@@ -5,7 +5,6 @@ import UserNav from '@/components/dashboard/UserNav.vue';
 import { ref, type Ref } from 'vue';
 import Select from './Select.vue';
 
-// Initialize as null for consistency with TeamSwitcher
 const committee: Ref<Team | null> = ref(null);
 </script>
 

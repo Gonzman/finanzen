@@ -13,7 +13,6 @@ import Delete from './modal/delete.vue';
 import Details from './modal/details.vue';
 import MilestoneTransactionStats from '@/components/dashboard/MilestoneTransactionStats.vue';
 
-// Define the expanded transaction type
 interface ExpandedTransaction extends TransactionResponse {
     expand?: {
         transactionAuth?: Array<{
@@ -29,26 +28,22 @@ const props = defineProps({
     } as const,
 });
 
-// Get milestones from PocketBase
 const milestones = pb.getMilestone(props.committee.id);
 const client = usePocketBase();
 
-// Define the type for milestone transactions
 interface MilestoneTransactions {
     [key: string]: ExpandedTransaction[];
 }
 
-// Store associated transactions for each milestone
 const milestoneTransactions = ref<MilestoneTransactions>({});
 
-// Fetch transactions associated with each milestone
 const fetchMilestoneTransactions = async () => {
     for (const milestone of milestones.value) {
         try {
             const transactions = await client.collection('transaction').getFullList({
                 filter: `milestone = "${milestone.id}"`,
                 sort: '-created',
-                expand: 'transactionAuth' // Include expanded transactionAuth data
+                expand: 'transactionAuth'
             });
             milestoneTransactions.value[milestone.id] = transactions as ExpandedTransaction[];
         } catch (error) {
@@ -58,23 +53,19 @@ const fetchMilestoneTransactions = async () => {
     }
 };
 
-// Watch for changes in milestones and update transactions
 watch(milestones, fetchMilestoneTransactions, { deep: true });
 
-// Call fetchMilestoneTransactions on mount
 onMounted(fetchMilestoneTransactions);
 
-// Calculate total amount for a milestone (sum of associated transactions)
 const getTotalAmount = (milestoneId: string): number => {
     if (!milestoneTransactions.value[milestoneId]) return 0;
     
     return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: ExpandedTransaction) => {
-        // Simply add the transaction amount (it already has the correct sign)
+    
         return total + transaction.amount;
     }, 0);
 };
 
-// Count transactions for a milestone
 const getTransactionCount = (milestoneId: string): number => {
     if (!milestoneTransactions.value[milestoneId]) return 0;
     return milestoneTransactions.value[milestoneId].length;

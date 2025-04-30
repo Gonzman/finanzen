@@ -18,19 +18,16 @@ const isDeleting = ref(false);
 const deleteMilestone = async () => {
     isDeleting.value = true;
     try {
-        // First, update any transactions referencing this milestone to remove the reference
         const transactions = await client.collection('transaction').getFullList({
             filter: `milestone = "${props.milestone.id}"`,
         });
         
-        // Update each transaction to remove milestone reference
         for (const transaction of transactions) {
             await client.collection('transaction').update(transaction.id, {
                 milestone: null
             });
         }
         
-        // Then delete the milestone
         await client.collection('milestone').delete(props.milestone.id);
         
         console.log('Milestone and references deleted successfully');

@@ -85,7 +85,7 @@ const formatTransaction = (amount: number, type: string) => {
         <TableCell>
           <TransactionStateIcon :state="invoice.state" :size="14" />
           <span class="text-sm">
-            {{ invoice.state }}
+            {{ " "+invoice.state }}
           </span>
         </TableCell>
         <TableCell>
@@ -115,9 +115,9 @@ const formatTransaction = (amount: number, type: string) => {
               <DropdownMenuSeparator />
               <div class="flex flex-col">
                 <Pruefen :id="invoice" v-if="useUser().isPruefer()" />
-                <Edit :id="invoice" v-if="invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgeschlossen" />
-                <Delete :id="invoice.expand!.transaction" v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert" />
-                <DropdownMenuSeparator v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert" />
+                <Edit :id="invoice" v-if="invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
+                <Delete :id="invoice.expand!.transaction" v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
+                <DropdownMenuSeparator v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
                 <Details :id="invoice.expand!.transaction">Details anzeigen</Details>
               </div>
             </DropdownMenuContent>

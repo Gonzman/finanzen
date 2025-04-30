@@ -2,13 +2,13 @@
 import { computed } from 'vue';
 import { TransactionAuthStateOptions } from '@/lib/pocketbase-types';
 
-// Import icons from lucide-vue-next
 import { 
   Clock, 
   CircleEllipsis, 
   CheckCircle, 
   CircleCheck, 
-  AlertCircle
+  AlertCircle,
+  XCircle
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -56,6 +56,12 @@ const stateConfig = computed(() => {
         icon: AlertCircle,
         color: 'text-red-500',
         tooltip: 'Fehlgeschlagen'
+      };
+    case TransactionAuthStateOptions.Abgelehnt:
+      return {
+        icon: XCircle,
+        color: 'text-red-500',
+        tooltip: 'Abgelehnt'
       };
     default:
       return {

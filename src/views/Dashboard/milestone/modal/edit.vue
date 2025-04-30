@@ -26,14 +26,11 @@ const props = defineProps({
     },
 });
 
-// Define reactive variables for v-model
 const title = ref(props.milestone.title);
 const description = ref(props.milestone.message || '');
 
-// Define reactive variables for transaction tabs
 const transactionTab = ref('current');
 
-// Define the expanded transaction type
 interface ExpandedTransaction extends TransactionResponse {
     expand?: {
         transactionAuth?: Array<{
@@ -42,22 +39,19 @@ interface ExpandedTransaction extends TransactionResponse {
     };
 }
 
-// Define reactive variables for existing transactions
 const existingTransactions = ref<ExpandedTransaction[]>([]);
 const isLoading = ref(false);
 const selectedTransactionIds = ref<string[]>([]);
 const availableTransactions = ref<TransactionResponse[]>([]);
 
-// Define reactive variables for new transaction
 const transactionTitle = ref('');
 const transactionAmount = ref(0);
 const transactionDescription = ref('');
-const isExpense = ref(false); // If true, this is an outgoing transaction
+const isExpense = ref(false);
 
 const client = usePocketBase();
 const user = useUser();
 
-// Fetch transactions already associated with this milestone
 const fetchExistingTransactions = async () => {
     isLoading.value = true;
     try {
@@ -74,7 +68,6 @@ const fetchExistingTransactions = async () => {
     }
 };
 
-// Fetch available transactions that aren't assigned to any milestone
 const fetchAvailableTransactions = async () => {
     isLoading.value = true;
     try {
@@ -92,7 +85,6 @@ const fetchAvailableTransactions = async () => {
     }
 };
 
-// Add selected existing transactions to the milestone
 const addExistingTransactions = async () => {
     if (selectedTransactionIds.value.length === 0) return;
     
@@ -105,11 +97,9 @@ const addExistingTransactions = async () => {
             });
         }
         
-        // Refresh both transaction lists
         await fetchExistingTransactions();
         await fetchAvailableTransactions();
         
-        // Clear selection
         selectedTransactionIds.value = [];
     } catch (error) {
         console.error('Error adding transactions to milestone:', error);
@@ -118,13 +108,11 @@ const addExistingTransactions = async () => {
     }
 };
 
-// Create a new transaction and associate it with the milestone
 const createNewTransaction = async () => {
     if (!transactionTitle.value || transactionAmount.value <= 0) return;
     
     isLoading.value = true;
     try {
-        // Create transaction
         const newTransaction = await client.collection('transaction').create({
             title: transactionTitle.value,
             amount: transactionAmount.value,
@@ -135,13 +123,11 @@ const createNewTransaction = async () => {
             createdby: user.userId,
         });
         
-        // Create transaction auth record
         await client.collection('transactionAuth').create({
             transaction: newTransaction.id,
             state: 'Ausstehend'
         });
         
-        // Refresh the existing transactions list
         await fetchExistingTransactions();
         
         // Reset form
@@ -155,13 +141,11 @@ const createNewTransaction = async () => {
 
 const updateMilestone = async () => {
     try {
-        // Update milestone details
         await client.collection('milestone').update(props.milestone.id, {
             title: title.value,
             message: description.value,
         });
         
-        // If there are selected transactions in the "add" tab, add them to the milestone
         if (selectedTransactionIds.value.length > 0) {
             for (const transactionId of selectedTransactionIds.value) {
                 await client.collection('transaction').update(transactionId, {
@@ -169,11 +153,9 @@ const updateMilestone = async () => {
                 });
             }
             
-            // Clear selection after adding
             selectedTransactionIds.value = [];
         }
         
-        // Refresh transaction lists
         await fetchExistingTransactions();
         await fetchAvailableTransactions();
         
@@ -203,14 +185,12 @@ const isSelected = (id: string) => {
     return selectedTransactionIds.value.includes(id);
 };
 
-// Remove transaction from milestone
 const removeTransaction = async (transactionId: string) => {
     try {
         await client.collection('transaction').update(transactionId, {
             milestone: null
         });
         
-        // Refresh transaction lists
         await fetchExistingTransactions();
         await fetchAvailableTransactions();
     } catch (error) {
@@ -259,7 +239,6 @@ onMounted(() => {
                             <TabsTrigger value="new">Neu erstellen</TabsTrigger>
                         </TabsList>
                         
-                        <!-- Current transactions tab -->
                         <TabsContent value="current">
                             <div v-if="isLoading" class="py-4 text-center">
                                 Lade Transaktionen...
@@ -299,7 +278,6 @@ onMounted(() => {
                             </div>
                         </TabsContent>
                         
-                        <!-- Add existing transactions tab -->
                         <TabsContent value="add">
                             <div v-if="isLoading" class="py-4 text-center">
                                 Lade Transaktionen...
@@ -336,7 +314,6 @@ onMounted(() => {
                             </div>
                         </TabsContent>
                         
-                        <!-- Create new transaction tab -->
                         <TabsContent value="new">
                             <div class="grid gap-4 py-2">
                                 <div class="flex items-center gap-2">

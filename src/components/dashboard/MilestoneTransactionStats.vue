@@ -21,18 +21,15 @@ const client = usePocketBase();
 const transactionAuths = ref<{[key: string]: TransactionAuthResponse}>({});
 const loading = ref(true);
 
-// Fetch transaction authorizations for all transactions in this milestone
 const fetchTransactionAuths = async () => {
   loading.value = true;
   
   try {
-    // Only fetch for transactions that exist
     if (props.transactions.length === 0) {
       loading.value = false;
       return;
     }
     
-    // Create a filter with all transaction IDs
     const transactionIds = props.transactions.map(t => t.id);
     const filter = transactionIds.map(id => `transaction="${id}"`).join('||');
     
@@ -40,7 +37,6 @@ const fetchTransactionAuths = async () => {
       filter: filter
     });
     
-    // Store results in a lookup object for easy access
     const auths: {[key: string]: TransactionAuthResponse} = {};
     for (const auth of results) {
       if (auth.transaction) {
@@ -55,7 +51,6 @@ const fetchTransactionAuths = async () => {
   }
 };
 
-// Count transactions by state
 const stateCounts = computed(() => {
   const counts = {
     [TransactionAuthStateOptions.Ausstehend]: 0,
@@ -63,10 +58,10 @@ const stateCounts = computed(() => {
     [TransactionAuthStateOptions.Autorisiert]: 0,
     [TransactionAuthStateOptions.Abgeschlossen]: 0,
     [TransactionAuthStateOptions.Fehlgeschlagen]: 0,
+    [TransactionAuthStateOptions.Abgelehnt]: 0,
     unknown: 0
   };
   
-  // Count transactions by their authorization state
   for (const transaction of props.transactions) {
     const auth = transactionAuths.value[transaction.id];
     if (auth && auth.state) {
@@ -79,7 +74,6 @@ const stateCounts = computed(() => {
   return counts;
 });
 
-// Watch for changes to transactions and update auth records
 watch(() => props.transactions, fetchTransactionAuths, { immediate: true });
 
 onMounted(fetchTransactionAuths);
@@ -87,7 +81,6 @@ onMounted(fetchTransactionAuths);
 
 <template>
   <div class="flex items-center gap-2" v-if="!loading">
-    <!-- Only display states that have at least one transaction in that state -->
     <div v-if="stateCounts[TransactionAuthStateOptions.Ausstehend] > 0" 
          class="flex items-center gap-1" title="Ausstehende Transaktionen">
       <TransactionStateIcon :state="TransactionAuthStateOptions.Ausstehend" :size="16" />
@@ -116,6 +109,11 @@ onMounted(fetchTransactionAuths);
          class="flex items-center gap-1" title="Fehlgeschlagene Transaktionen">
       <TransactionStateIcon :state="TransactionAuthStateOptions.Fehlgeschlagen" :size="16" />
       <span class="text-xs">{{ stateCounts[TransactionAuthStateOptions.Fehlgeschlagen] }}</span>
+    </div>
+    <div v-if="stateCounts[TransactionAuthStateOptions.Abgelehnt] > 0" 
+         class="flex items-center gap-1" title="Abgelehnte Transaktionen">
+      <TransactionStateIcon :state="TransactionAuthStateOptions.Abgelehnt" :size="16" />
+      <span class="text-xs">{{ stateCounts[TransactionAuthStateOptions.Abgelehnt] }}</span>
     </div>
   </div>
   <div v-else class="text-xs text-muted-foreground">Lade...</div>
