@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useUser } from '@/components/usePocketbase';
-import pb from '@/lib/pb';
+import pb, { type ExpandTransaction } from '@/lib/pb';
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,7 +11,7 @@ import Edit from './modal/edit.vue';
 import Delete from './modal/delete.vue';
 import Pruefen from './modal/pruefen.vue';
 import Details from './modal/details.vue';
-import { TransactionAuthStateOptions, TransactionTypeOptions } from '@/lib/pocketbase-types';
+import { Collections, TransactionAuthStateOptions, TransactionTypeOptions, type IsoDateString, type RecordIdString, type TransactionAuthResponse } from '@/lib/pocketbase-types';
 import TransactionStateIcon from '@/components/dashboard/TransactionStateIcon.vue';
 
 const props = defineProps({
@@ -35,10 +35,12 @@ const filteredTransaction = computed(() => {
 
   console.log(transaction.value);
 
+  const filterArray = filter.value.split(',').map((f) => f.trim());
   return transaction.value.filter((t) => {
     return (
-      t.expand?.transaction.title.toLowerCase().includes(filter.value.toLowerCase()) ||
-      t.expand?.transaction.type.toLowerCase().includes(filter.value.toLowerCase())
+      filterArray.every(f => {
+        return filterState(t, f);
+      })
     );
   });
 });
@@ -63,6 +65,17 @@ const formatTransaction = (amount: number, type: string) => {
     isIncoming
   };
 };
+
+function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: string) {
+  return t.expand?.transaction.title.toLowerCase().includes(filter.toLowerCase()) ||
+    t.expand?.transaction.type.toLowerCase().includes(filter.toLowerCase()) ||
+    t.state.toLowerCase().includes(filter.toLowerCase()) ||
+    (t.expand?.transaction.expand?.milestone?.title?.toLowerCase().includes(filter.toLowerCase()) ?? false) ||
+    t.expand?.transaction.amount.toString().includes(filter.toLowerCase()) ||
+    //t.state.toLowerCase().includes(filter.value.toLowerCase()) ||
+    t.expand?.transaction.expand?.createdby.name.toLowerCase().includes(filter.toLowerCase()) ||
+    t.expand?.transaction.expand?.createdby.email.toLowerCase().includes(filter.toLowerCase());
+}
 </script>
 
 <template>
@@ -114,11 +127,11 @@ const formatTransaction = (amount: number, type: string) => {
               <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div class="flex flex-col">
+                <Details :id="invoice">Details anzeigen</Details>
                 <Pruefen :id="invoice" v-if="useUser().isPruefer()" />
                 <Edit :id="invoice" v-if="invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
                 <Delete :id="invoice.expand!.transaction" v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
                 <DropdownMenuSeparator v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
-                <Details :id="invoice.expand!.transaction">Details anzeigen</Details>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>

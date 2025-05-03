@@ -61,7 +61,7 @@ const getTotalAmount = (milestoneId: string): number => {
     if (!milestoneTransactions.value[milestoneId]) return 0;
     
     return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: ExpandedTransaction) => {
-    
+        
         return total + transaction.amount;
     }, 0);
 };
