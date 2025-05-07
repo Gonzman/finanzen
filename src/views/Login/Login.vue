@@ -26,6 +26,7 @@ async function handleLogin() {
         isLoading.value = false;
     }
 }
+
 </script>
 
 <template>
@@ -58,6 +59,8 @@ async function handleLogin() {
                     <Button type="submit" class="w-full" :disabled="isLoading">
                         {{ isLoading ? 'Anmelden...' : 'Anmelden' }}
                     </Button>
+
+
                 </form>
             </CardContent>
         </div>

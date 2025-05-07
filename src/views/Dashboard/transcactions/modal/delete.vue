@@ -41,9 +41,11 @@ function deleteTransaction() {
         </DialogDescription>
     </DialogHeader>
     <div>
-        <Button variant="destructive" class="w-full" @click="deleteTransaction">
-            Löschen
-        </Button>
+        <DialogClose asChild>
+            <Button variant="destructive" class="w-full" @click="deleteTransaction">
+                Löschen
+            </Button>
+        </DialogClose>
         <DialogClose asChild>
             <Button variant="outline" class="w-full">
                 Abbrechen

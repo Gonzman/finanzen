@@ -11,7 +11,7 @@ import Edit from './modal/edit.vue';
 import Delete from './modal/delete.vue';
 import Pruefen from './modal/pruefen.vue';
 import Details from './modal/details.vue';
-import { Collections, TransactionAuthStateOptions, TransactionTypeOptions, type IsoDateString, type RecordIdString, type TransactionAuthResponse } from '@/lib/pocketbase-types';
+import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse } from '@/lib/pocketbase-types';
 import TransactionStateIcon from '@/components/dashboard/TransactionStateIcon.vue';
 
 const props = defineProps({

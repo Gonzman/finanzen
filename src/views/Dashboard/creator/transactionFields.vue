@@ -23,6 +23,8 @@ const amount = ref(0);
 const ausgabe = ref(true);
 const showAmountError = ref(false);
 
+const images = ref<File[] | null>(null);
+
 const user = useUser();
 const pocketbase = usePocketBase();
 
@@ -32,6 +34,7 @@ function createTransaction() {
         showAmountError.value = true;
         return;
     }
+    
     showAmountError.value = false;
 
     const data = {
@@ -40,6 +43,7 @@ function createTransaction() {
         amount: ausgabe.value ? -Math.abs(amount.value) : Math.abs(amount.value),
         ausschuss: props.committee.id,
         createdby: user.userId,
+        recipe: images.value,
         type: ausgabe.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,
     };
 
@@ -52,8 +56,20 @@ function createTransaction() {
     });
 }
 
+function changeImage(event: Event){
+  
+    const files = (event.target as HTMLInputElement).files;
+    if (files) {
+        images.value = Array.from(files)
+    }   
+}
+
+function clearImage() {
+    images.value = null;
+}
+
 const isValid = computed(() => {
-    return title.value.length > 0 && amount.value > 0;
+    return title.value.length > 0 && amount.value > 0 && images.value && images.value.length > 0;
 });
 
 </script>
@@ -65,22 +81,28 @@ const isValid = computed(() => {
             
         </div>
         <Label>Titel</Label>
-        <Input placeholder="Titel" v-model="title" />
+        <Input placeholder="Titel" v-model.trim="title" />
 
         <Label>Betrag</Label>
         <Input 
             placeholder="Betrag" 
-            v-model="amount" 
+            v-model.number="amount" 
             inputmode="numeric"
             type="number" 
-            min="0.01" 
-            step="0.01" 
             @input="showAmountError = false"
         />
         <div v-if="showAmountError" class="text-red-500 text-sm">Betrag muss größer als 0 sein</div>
         
         <Label>Beschreibung</Label>
-        <Textarea placeholder="Beschreibung" v-model="description"></Textarea>
+        <Textarea placeholder="Beschreibung" v-model.trim="description"></Textarea>
+
+        <div>
+            <Label>Belege</Label>
+            <div class="flex flex-row justify-end space-x-2">
+                <Input type="file" multiple @change="changeImage"/>  
+                <Button variant="destructive" size="icon" @click="() => clearImage()" :disabled="!images">X</Button>
+            </div>
+        </div>
 
         <DialogClose as-child>
             <Button :onclick="createTransaction" type="button" variant="default" :disabled="!isValid">Erstellen</Button>

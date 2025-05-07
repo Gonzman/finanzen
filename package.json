@@ -7,7 +7,7 @@
         "dev": "vite",
         "build": "vue-tsc && vite build && scp -r ./dist/* offen:./finanzen/public/",
         "preview": "vite preview",
-        "generate-types": "bunx pocketbase-typegen --json ./pb_schema.json --out src/lib/pocketbase-types.ts"
+        "generate-types": "bunx pocketbase-typegen --json ./pb_schema.json --out src/lib/pocketbase-types1.ts"
     },
     "dependencies": {
         "@radix-icons/vue": "^1.0.0",

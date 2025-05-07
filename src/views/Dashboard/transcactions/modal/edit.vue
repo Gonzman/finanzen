@@ -18,10 +18,11 @@ const props = defineProps({
 });
 
 const title = ref(props.id.expand?.transaction.title || '');
-const amount = ref(props.id.expand?.transaction.amount || 0);
+const amount = ref(Math.abs(props.id.expand?.transaction.amount) || 0);
 const description = ref(props.id.expand?.transaction.message || '');
 const ausgabe = ref(props.id.expand?.transaction.type === TransactionTypeOptions.Ausgehend); // Default value for the switch
 const showAmountError = ref(false);
+const images = ref<File[] | null>(null);
 
 function createTransaction() {
     if (amount.value <= 0) {
@@ -30,11 +31,12 @@ function createTransaction() {
     }
     showAmountError.value = false;  
 
-    usePocketBase().collection('transaction').update(props.id.id, {
+    usePocketBase().collection('transaction').update(props.id.expand!.transaction.id, {
         title: title.value,
         message: description.value,
         amount: ausgabe.value ? -Math.abs(amount.value) : Math.abs(amount.value),
         type: ausgabe.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,
+        recipe: images.value,
     }).then(() => {
         console.log('Transaction updated successfully');
     }).catch((error) => {
@@ -53,6 +55,13 @@ const isValid = computed(() => {
     return amount.value > 0;
 });
 
+
+function changeImage(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target.files) {
+        images.value = Array.from(target.files);
+    }
+}
 </script>
 
 <template>
@@ -93,6 +102,9 @@ const isValid = computed(() => {
         
         <Label>Beschreibung</Label>
         <Textarea :placeholder="id.expand?.transaction.message || 'Beschreibung'" v-model="description"></Textarea>
+
+        <Label>Beleg</Label>
+        <Input type="file" multiple @change="changeImage" />
 
         <DialogClose as-child>
             <Button 

@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { type PropType, computed, ref } from 'vue';
-import type { TransactionAuthResponse } from '@/lib/pocketbase-types';
+import type { TransactionAuthResponse, TransactionResponse } from '@/lib/pocketbase-types';
 import { TransactionAuthStateOptions, TransactionTypeOptions } from '@/lib/pocketbase-types';
 import type { ExpandTransaction } from '@/lib/pb';
 import { usePocketBase, User, useUser } from '@/components/usePocketbase';
@@ -44,7 +44,7 @@ const transactionData = computed(() => {
 });
 
 import { watch } from 'vue';
-
+import pb from '@/lib/pb';
 watch(auth, (value: boolean) => {
     if (value) {
         let stateT = props.id.state;
@@ -75,6 +75,12 @@ watch(auth, (value: boolean) => {
     }
     
 });
+
+// Add function to truncate filenames if they're too long
+const truncateFilename = (filename: string, maxLength: number = 30) => {
+  if (filename.length <= maxLength) return filename;
+  return filename.substring(0, maxLength) + '...' + filename.substring(filename.length - 4);
+};
 </script>
 
 <template>
@@ -117,6 +123,17 @@ watch(auth, (value: boolean) => {
                 <span class="text-sm text-muted-foreground">Nachricht:</span>
                 <p class="text-sm mt-1 p-2 bg-muted rounded-md">{{props.id.expand?.transaction.message }}</p>
             </div>
+
+            <div v-if="props.id.expand?.transaction.recipe && props.id.expand?.transaction.recipe.length > 0">
+                <span class="text-sm text-muted-foreground">Anhang:</span>
+                
+                <p v-for="attachment in props.id.expand?.transaction.recipe" :key="attachment" @click="pb.getFileFromUrl(props.id.expand?.transaction, attachment)" class="text-sm text-blue-500 hover:underline text-wrap" variant="outline">
+                    {{ truncateFilename(attachment.split('/').pop() || '') }}
+                </p>
+      
+            </div>
+
+            
         </div>
 
         <div v-if="User.getInstance().isPruefer()" class="flex justify-between">

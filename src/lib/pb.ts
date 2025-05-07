@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { TransactionAuthStateOptions, type AusschussResponse, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersRecord, type UsersResponse } from "./pocketbase-types";
+import { Collections, TransactionAuthStateOptions, type AusschussResponse, type CollectionRecords, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersResponse } from "./pocketbase-types";
 import { usePocketBase } from "@/components/usePocketbase";
 
 class pb {
@@ -92,7 +92,7 @@ class pb {
             const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "transaction.createdby, transaction",
-                filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
+                filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
             for (const item of authorizedResult) {
@@ -120,7 +120,7 @@ class pb {
             const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "transaction.createdby, transaction",
-                filter: `state != "${TransactionAuthStateOptions.Fehlgeschlagen}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
+                filter: `state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
             for (const item of authorizedResult) {
@@ -232,6 +232,10 @@ class pb {
         this.client.collection('transactionAuth').unsubscribe('*');
         this.client.collection('transaction').unsubscribe('*');
         this.client.collection('milestone').unsubscribe('*');
+    }
+    async getFileFromUrl(record: TransactionResponse<unknown>, file:string) {
+        const token = await usePocketBase().files.getToken();
+        return window.open(usePocketBase().files.getURL(record, file, {token: token}), '_blank');
     }
 }
 
