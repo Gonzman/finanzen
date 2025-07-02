@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { Collections, TransactionAuthStateOptions, type AusschussResponse, type CollectionRecords, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersResponse } from "./pocketbase-types";
+import { Collections, TransactionAuthStateOptions, TransactionTypeOptions, type AusschussResponse, type CollectionRecords, type MilestoneResponse, type TransactionAuthResponse, type TransactionResponse, type UsersResponse } from "./pocketbase-types";
 import { usePocketBase } from "@/components/usePocketbase";
 
 class pb {
@@ -32,7 +32,7 @@ class pb {
             return this.getTransaction(currentAusschuss);
         } else {
             return this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                expand: "transaction.createdby, transaction",
+                expand: "transaction, transaction.createdby",
                 sort: "-updated"
             }).then((result) => {
                 this.transaction.value = result;
@@ -59,7 +59,7 @@ class pb {
 
     getTransaction(ausschuss: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-            expand: "transaction.createdby, transaction, transaction.milestone",
+            expand: "transaction, transaction.createdby, transaction.milestone",
             sort: "-updated", 
             filter: `transaction.ausschuss = "${ausschuss}"`
         }).then((result) => {
@@ -70,7 +70,7 @@ class pb {
 
     getMilestoneTransactions(milestoneId: string) {
         this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-            expand: "transaction.createdby, transaction",
+            expand: "transaction, transaction.createdby",
             sort: "-updated", 
             filter: `transaction.milestone = "${milestoneId}"`
         }).then((result) => {
@@ -91,7 +91,7 @@ class pb {
         try {
             const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
-                expand: "transaction.createdby, transaction",
+                expand: "transaction, transaction.createdby",
                 filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
@@ -101,8 +101,8 @@ class pb {
             
             const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
-                expand: "transaction.createdby, transaction",
-                filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions["In Bearbeitung"]}"`
+                expand: "transaction, transaction.createdby",
+                filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions["In Bearbeitung"]}" && type = "${TransactionTypeOptions.Ausgehend}"`
             });
 
             for (const item of inProgressResult) {
@@ -119,7 +119,7 @@ class pb {
         try {
             const authorizedResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
-                expand: "transaction.createdby, transaction",
+                expand: "transaction, transaction.createdby",
                 filter: `state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`
             });
 
@@ -129,8 +129,8 @@ class pb {
             
             const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
-                expand: "transaction.createdby, transaction",
-                filter: `state = "${TransactionAuthStateOptions["In Bearbeitung"]}"`
+                expand: "transaction, transaction.createdby",
+                filter: `state = "${TransactionAuthStateOptions["In Bearbeitung"]} && type = "${TransactionTypeOptions.Ausgehend}""`
             });
 
             for (const item of inProgressResult) {

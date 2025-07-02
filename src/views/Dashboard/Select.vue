@@ -41,7 +41,7 @@ onUnmounted(() => {
             <TabsTrigger value="transactions"> Transaktionen </TabsTrigger>
             <TabsTrigger value="milestones"> Meilensteine </TabsTrigger>
             <Separator orientation="vertical" class="m-2" v-if="props.committee.chair == user.userId"/>
-            <Creator v-if="props.committee.chair == user.userId" :committee="props.committee"/>
+            <Creator v-if="props.committee.users?.includes(user.userId)" :committee="props.committee"/>
         </TabsList>
         <TabsContent value="overview">
             <Overview :committee="props.committee" :key="props.committee.id"></Overview>

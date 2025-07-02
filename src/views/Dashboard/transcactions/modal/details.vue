@@ -116,7 +116,11 @@ const truncateFilename = (filename: string, maxLength: number = 30) => {
 
             <div class="flex justify-between">
                 <span class="text-sm text-muted-foreground">Erstellt von</span>
-                <span class="text-sm">{{props.id.expand?.transaction.expand?.createdby.name ??props.id.expand?.transaction.expand?.createdby?.email }}</span>
+                <span class="text-sm">
+                  {{ props.id.expand?.transaction.expand?.createdby?.name || 
+                     props.id.expand?.transaction.expand?.createdby?.email || 
+                     'Unbekannt' }}
+                </span>
             </div>
             
             <div v-if="props.id.expand?.transaction.message" class="mt-2">

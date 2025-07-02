@@ -121,11 +121,11 @@ onMounted(() => {
 <template>
     <div class="grid gap-4 py-4">
         <div class="grid gap-2">
-            <Label for="title">Titel</Label>
+            <Label for="title">Titel<span class="text-red-500">*</span></Label>
             <Input id="title" placeholder="Titel des Meilensteins" v-model="title" />
         </div>
         <div class="grid gap-2">
-            <Label for="description">Beschreibung</Label>
+            <Label for="description">Beschreibung<span class="text-red-500">*</span></Label>
             <Textarea id="description" placeholder="Beschreibe den Meilenstein..." v-model="description" />
         </div>
 

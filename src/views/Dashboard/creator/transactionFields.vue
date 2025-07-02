@@ -69,7 +69,7 @@ function clearImage() {
 }
 
 const isValid = computed(() => {
-    return title.value.length > 0 && amount.value > 0 && images.value && images.value.length > 0;
+    return title.value.length > 0 && amount.value > 0 ;
 });
 
 </script>
@@ -80,13 +80,14 @@ const isValid = computed(() => {
             <Label>Ist eine ausgabe? <Switch v-model="ausgabe"/></Label>
             
         </div>
-        <Label>Titel</Label>
+
+        <Label>Titel<span class="text-red-500">*</span></Label>
         <Input placeholder="Titel" v-model.trim="title" />
 
-        <Label>Betrag</Label>
-        <Input 
-            placeholder="Betrag" 
-            v-model.number="amount" 
+        <Label>Betrag<span class="text-red-500">*</span></Label>
+        <Input
+            placeholder="Betrag"
+            v-model.number="amount"
             inputmode="numeric"
             type="number" 
             @input="showAmountError = false"
