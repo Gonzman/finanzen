@@ -6,7 +6,7 @@ import { type Team } from '@/components/dashboard/TeamSwitcher.vue';
 import Milestones from './milestone/milestones.vue';
 import Transcactions from './transcactions/transcactions.vue';
 import Creator from './creator/creator.vue';
-import { usePocketBase, useUser } from '@/components/usePocketbase';
+import { useUser } from '@/components/usePocketbase';
 import Overview from './overview/overview.vue';
 import { onMounted, onUnmounted } from 'vue';
 import pb from '@/lib/pb';
@@ -14,10 +14,14 @@ const props= defineProps({
     committee: {
         type: Object as () => Team,
         required: true,
-    } as const,
-});
+    },
+    currentTab: {
+        type: String,
+        default: 'overview',
+    },
+} as const);
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:currentTab']);
 
 const user = useUser();
 
@@ -35,7 +39,7 @@ onUnmounted(() => {
     <div class="flex items-center justify-between space-y-2">
         <h2 class="text-3xl font-bold tracking-tight">Dashboard</h2>
     </div>
-    <Tabs default-value="overview" class="space-y-4 deep">
+    <Tabs :model-value="props.currentTab" @update:model-value="(value) => emit('update:currentTab', value)" class="space-y-4 deep">
         <TabsList>
             <TabsTrigger value="overview"> Überblick </TabsTrigger>
             <TabsTrigger value="transactions"> Transaktionen </TabsTrigger>
