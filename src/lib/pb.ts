@@ -237,6 +237,11 @@ class pb {
         const token = await usePocketBase().files.getToken();
         return window.open(usePocketBase().files.getURL(record, file, {token: token}), '_blank');
     }
+
+    async getFileURL(record: TransactionResponse<unknown>, file: string) {
+        const token = await usePocketBase().files.getToken();
+        return usePocketBase().files.getURL(record, file, {token: token})
+    }
 }
 
 export default pb.getInstance();

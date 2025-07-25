@@ -25,15 +25,10 @@ const transactionData = computed(() => {
     const bgColor = isIncoming ? 'bg-green-100' : 'bg-red-100';
     const textColor = isIncoming ? 'text-green-700' : 'text-red-700';
     
-    const formattedAmount = new Intl.NumberFormat('de-DE', {
-        style: 'currency',
-        currency: 'EUR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(amount);
-    
-    const shortDisplay = isIncoming ? `+${amount}€` : `-${amount}€`;
-    
+    const formattedAmount = formatCurrency(amount);
+
+    const shortDisplay = isIncoming ? `+${formattedAmount}` : `-${formattedAmount}`;
+
     return {
         bgColor,
         textColor,
@@ -45,6 +40,7 @@ const transactionData = computed(() => {
 
 import { watch } from 'vue';
 import pb from '@/lib/pb';
+import { formatCurrency } from '@/ts/format';
 watch(auth, (value: boolean) => {
     if (value) {
         let stateT = props.id.state;

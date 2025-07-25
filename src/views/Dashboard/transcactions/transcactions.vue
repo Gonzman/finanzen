@@ -13,6 +13,7 @@ import Pruefen from './modal/pruefen.vue';
 import Details from './modal/details.vue';
 import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse } from '@/lib/pocketbase-types';
 import TransactionStateIcon from '@/components/dashboard/TransactionStateIcon.vue';
+import { formatCurrency } from '@/ts/format';
 
 const props = defineProps({
   committee: {
@@ -48,12 +49,7 @@ const filteredTransaction = computed(() => {
 // Format transaction amount with styling
 const formatTransaction = (amount: number, type: string) => {
   const isIncoming = type === TransactionTypeOptions.Eingehend;
-  const formattedAmount = new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount);
+  const formattedAmount = formatCurrency(amount);
 
   const shortDisplay = isIncoming ? `+${amount}€` : `-${amount}€`;
 

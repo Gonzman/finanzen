@@ -40,7 +40,7 @@ const user = useUser();
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="user.logout()">
-                Log out
+                Abmelden
             </DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
