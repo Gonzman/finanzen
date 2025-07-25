@@ -6,19 +6,15 @@ import pb from '@/lib/pb';
 import { ref, watch, computed, onMounted } from 'vue';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Button from '@/components/ui/button/Button.vue';
-import { type TransactionResponse} from '@/lib/pocketbase-types';
+import { TransactionAuthStateOptions, type TransactionAuthResponse, type TransactionResponse} from '@/lib/pocketbase-types';
 import { usePocketBase } from '@/components/usePocketbase';
 import Edit from './modal/edit.vue';
 import Delete from './modal/delete.vue';
 import Details from './modal/details.vue';
 import MilestoneTransactionStats from '@/components/dashboard/MilestoneTransactionStats.vue';
 
-interface ExpandedTransaction extends TransactionResponse {
-    expand?: {
-        transactionAuth?: Array<{
-            state: string;
-        }>;
-    };
+interface ExpandedTransaction{
+    transactionAuth_via_transaction?: TransactionAuthResponse[];
 }
 
 const props = defineProps({
@@ -32,7 +28,7 @@ const milestones = pb.getMilestone(props.committee.id);
 const client = usePocketBase();
 
 interface MilestoneTransactions {
-    [key: string]: ExpandedTransaction[];
+    [key: string]: TransactionResponse<ExpandedTransaction>[];
 }
 
 const milestoneTransactions = ref<MilestoneTransactions>({});
@@ -43,9 +39,9 @@ const fetchMilestoneTransactions = async () => {
             const transactions = await client.collection('transaction').getFullList({
                 filter: `milestone = "${milestone.id}"`,
                 sort: '-created',
-                expand: 'transactionAuth'
+                expand: 'transactionAuth_via_transaction'
             });
-            milestoneTransactions.value[milestone.id] = transactions as ExpandedTransaction[];
+            milestoneTransactions.value[milestone.id] = transactions as TransactionResponse<ExpandedTransaction>[];
         } catch (error) {
             console.error(`Error fetching transactions for milestone ${milestone.id}:`, error);
             milestoneTransactions.value[milestone.id] = [];
@@ -60,11 +56,25 @@ onMounted(fetchMilestoneTransactions);
 const getTotalAmount = (milestoneId: string): number => {
     if (!milestoneTransactions.value[milestoneId]) return 0;
     
-    return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: ExpandedTransaction) => {
+    return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: TransactionResponse<ExpandedTransaction>) => {
         
         return total + transaction.amount;
     }, 0);
 };
+
+const getApprovedAmount = (milestoneId: string): number => {
+    if (!milestoneTransactions.value[milestoneId]) return 0;
+    
+    return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: TransactionResponse<ExpandedTransaction>) => {
+        console.log('Checking transaction:', transaction.expand?.transactionAuth_via_transaction?.[0]?.state ?? 'undefined');
+        if (transaction.expand?.transactionAuth_via_transaction?.[0]?.state === TransactionAuthStateOptions.Autorisiert) {
+            console.log('Adding approved transaction:', transaction);
+            return total + transaction.amount;
+        }
+        return total;
+    }, 0);
+};
+
 
 const getTransactionCount = (milestoneId: string): number => {
     if (!milestoneTransactions.value[milestoneId]) return 0;
@@ -98,6 +108,7 @@ const filteredMilestones = computed(() => {
                 <TableHead>Beschreibung</TableHead>
                 <TableHead>Anzahl Transaktionen</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead class="text-right">Summe: Genehmigt</TableHead>
                 <TableHead class="text-right">Summe</TableHead>
                 <TableHead class="w-0 p-0"></TableHead>
             </TableRow>
@@ -114,6 +125,10 @@ const filteredMilestones = computed(() => {
                         :milestoneId="milestone.id" 
                         :transactions="milestoneTransactions[milestone.id] || []" 
                     />
+                </TableCell>
+
+                <TableCell class="text-right" :class="getApprovedAmount(milestone.id) < 0 ? 'text-red-500' : 'text-green-500'">
+                    {{ getApprovedAmount(milestone.id).toFixed(2) }} €
                 </TableCell>
                 <TableCell class="text-right" :class="getTotalAmount(milestone.id) < 0 ? 'text-red-500' : 'text-green-500'">
                     {{ getTotalAmount(milestone.id).toFixed(2) }} €
