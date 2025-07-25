@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
-import { onMounted, ref } from 'vue';
+import { ref, watch } from 'vue';
 import { CaretSortIcon, CheckIcon } from '@radix-icons/vue';
 
 import Dialog from '../ui/dialog/Dialog.vue';
@@ -42,20 +42,48 @@ export type Team = (typeof groups.value.teams)[number];
 const open = ref(false);
 const showNewTeamDialog = ref(false);
 
-const intervall = setInterval(() => {
-if (
-    selectedTeam.value === null ||
-    JSON.stringify(selectedTeam.value) === JSON.stringify({
-        chair: '',
-        id: '',
-        name: '',
-        created: undefined,
-        updated: undefined,
-        users: undefined,
-    })
-) {
-    selectedTeam.value = groups.value.teams[0] || null;
+// Helper functions for localStorage
+const saveSelectedTeamToStorage = (team: Team | null) => {
+    if (team) {
+        localStorage.setItem('selectedTeam', JSON.stringify(team));
+    } else {
+        localStorage.removeItem('selectedTeam');
     }
+};
+
+const loadSelectedTeamFromStorage = (): Team | null => {
+    try {
+        const savedTeam = localStorage.getItem('selectedTeam');
+        if (savedTeam) {
+            const parsedTeam = JSON.parse(savedTeam);
+            // Verify that the saved team still exists in the current teams list
+            const teamExists = groups.value.teams.find(team => team.id === parsedTeam.id);
+            return teamExists || null;
+        }
+    } catch (error) {
+        console.error('Error loading selected team from localStorage:', error);
+        localStorage.removeItem('selectedTeam');
+    }
+    return null;
+};
+
+// Watch for changes in selectedTeam and save to localStorage
+watch(selectedTeam, (newTeam) => {
+    saveSelectedTeamToStorage(newTeam);
+}, { deep: true });
+
+const intervall = setInterval(() => {
+    // First try to load from localStorage
+    if (selectedTeam.value === null) {
+        const savedTeam = loadSelectedTeamFromStorage();
+        if (savedTeam) {
+            selectedTeam.value = savedTeam;
+        } else if (groups.value.teams.length > 0) {
+            // Only set default if no saved team and teams are available
+            selectedTeam.value = groups.value.teams[0] || null;
+        }
+    }
+    
     if (selectedTeam.value !== null) {
         clearInterval(intervall);
     }

@@ -8,7 +8,7 @@ import Transcactions from './transcactions/transcactions.vue';
 import Creator from './creator/creator.vue';
 import { useUser } from '@/components/usePocketbase';
 import Overview from './overview/overview.vue';
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, watch } from 'vue';
 import pb from '@/lib/pb';
 const props= defineProps({
     committee: {
@@ -25,8 +25,39 @@ const emit = defineEmits(['update:currentTab']);
 
 const user = useUser();
 
-onMounted(() =>{
-    pb.startSync()
+// Helper functions for localStorage
+const saveCurrentTabToStorage = (tab: string) => {
+    localStorage.setItem('currentTab', tab);
+};
+
+const loadCurrentTabFromStorage = (): string => {
+    try {
+        const savedTab = localStorage.getItem('currentTab');
+        if (savedTab) {
+            // Validate that the saved tab is one of the valid tabs
+            const validTabs = ['overview', 'transactions', 'milestones'];
+            return validTabs.includes(savedTab) ? savedTab : 'overview';
+        }
+    } catch (error) {
+        console.error('Error loading current tab from localStorage:', error);
+        localStorage.removeItem('currentTab');
+    }
+    return 'overview';
+};
+
+// Load saved tab on component mount and emit if different from default
+onMounted(() => {
+    pb.startSync();
+    
+    const savedTab = loadCurrentTabFromStorage();
+    if (savedTab !== props.currentTab) {
+        emit('update:currentTab', savedTab);
+    }
+});
+
+// Watch for tab changes and save to localStorage
+watch(() => props.currentTab, (newTab) => {
+    saveCurrentTabToStorage(newTab);
 });
 
 onUnmounted(() => {

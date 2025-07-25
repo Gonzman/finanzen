@@ -102,7 +102,7 @@ class pb {
             const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "transaction, transaction.createdby",
-                filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions["In Bearbeitung"]}" && type = "${TransactionTypeOptions.Ausgehend}"`
+                filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions["In Bearbeitung"]}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`
             });
 
             for (const item of inProgressResult) {
@@ -130,7 +130,7 @@ class pb {
             const inProgressResult = await this.client.collection("transactionAuth").getFullList<TransactionAuthResponse<ExpandTransaction>>({
                 sort: "-updated",
                 expand: "transaction, transaction.createdby",
-                filter: `state = "${TransactionAuthStateOptions["In Bearbeitung"]} && type = "${TransactionTypeOptions.Ausgehend}""`
+                filter: `state = "${TransactionAuthStateOptions["In Bearbeitung"]}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`
             });
 
             for (const item of inProgressResult) {
