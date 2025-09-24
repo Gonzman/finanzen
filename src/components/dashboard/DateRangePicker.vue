@@ -31,16 +31,11 @@ const value = ref({
     <div :class="cn('grid gap-2', $attrs.class ?? '')">
         <Popover>
             <PopoverTrigger as-child>
-                <Button
-                    id="date"
-                    :variant="'outline'"
-                    :class="
-                        cn(
-                            'w-[300px] justify-start text-left font-normal',
-                            !value && 'text-muted-foreground',
-                        )
-                    "
-                >
+                <Button id="date" :variant="'outline'" :class="cn(
+                    'w-[300px] justify-start text-left font-normal',
+                    !value && 'text-muted-foreground',
+                )
+                    ">
                     <CalendarIcon class="mr-2 h-4 w-4" />
 
                     <template v-if="value.start">
@@ -68,14 +63,8 @@ const value = ref({
                 </Button>
             </PopoverTrigger>
             <PopoverContent class="w-auto p-0" align="end">
-                <RangeCalendar
-                    v-model="value"
-                    weekday-format="short"
-                    :number-of-months="2"
-                    initial-focus
-                    :placeholder="value.start"
-                    @update:start-value="startDate => (value.start = startDate)"
-                />
+                <RangeCalendar v-model="value" weekday-format="short" :number-of-months="2" initial-focus
+                    :placeholder="value.start" @update:start-value="startDate => (value.start = startDate)" />
             </PopoverContent>
         </Popover>
     </div>

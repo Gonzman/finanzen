@@ -94,20 +94,21 @@ function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: stri
         <TableCell>
           <TransactionStateIcon :state="invoice.state" :size="14" />
           <span class="text-sm">
-            {{ " "+invoice.state }}
+            {{ " " + invoice.state }}
           </span>
         </TableCell>
         <TableCell>
           <span :class="`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${invoice.expand?.transaction.type === TransactionTypeOptions.Eingehend
-              ? 'bg-green-50 text-green-700'
-              : 'bg-red-50 text-red-700'
+            ? 'bg-green-50 text-green-700'
+            : 'bg-red-50 text-red-700'
             }`">
             {{ invoice.expand?.transaction.type }}
           </span>
         </TableCell>
         <TableCell>{{ invoice.expand?.transaction?.expand?.milestone?.title ?? "/" }}</TableCell>
         <TableCell class="text-right">
-          <div class="flex items-center justify-end" :class="invoice.expand!.transaction.amount < 0 ? 'text-red-500' : 'text-green-500'">
+          <div class="flex items-center justify-end"
+            :class="invoice.expand!.transaction.amount < 0 ? 'text-red-500' : 'text-green-500'">
             {{ formatTransaction(invoice.expand!.transaction.amount, invoice.expand!.transaction.type).formattedAmount
             }}
           </div>
@@ -125,9 +126,12 @@ function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: stri
               <div class="flex flex-col">
                 <Details :id="invoice">Details anzeigen</Details>
                 <Pruefen :id="invoice" v-if="useUser().isPruefer()" />
-                <Edit :id="invoice" v-if="invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
-                <Delete :id="invoice.expand!.transaction" v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
-                <DropdownMenuSeparator v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
+                <Edit :id="invoice"
+                  v-if="invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
+                <Delete :id="invoice.expand!.transaction"
+                  v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
+                <DropdownMenuSeparator
+                  v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
               </div>
             </DropdownMenuContent>
           </DropdownMenu>

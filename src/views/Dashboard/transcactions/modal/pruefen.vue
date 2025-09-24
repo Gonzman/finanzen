@@ -1,57 +1,54 @@
 <template>
-     <Dialog>
-    <DialogTrigger asChild>
-    <Button variant="ghost" class="text-left w-fulls justify-start">
-        Prüfen
-    </Button>
-    </DialogTrigger>
-    <DialogContent class="sm:max-w-[425px]">
-    <DialogHeader>
-        <DialogTitle>Prüfen</DialogTitle>
-        <DialogDescription>
-        Hier kann der Prüfstatus der Transaktion geändert werden.
-        </DialogDescription>
-    </DialogHeader>
-    <div>
-        <Select :defaultValue="id.state" class="w-full" v-model="state">
-            <SelectTrigger>
-                <SelectValue :value="id.state" :placeholder="id.state" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectGroup>
-                    <SelectLabel>Status</SelectLabel>
-                    <SelectItem 
-                        v-for="option in TransactionAuthStateOptions" 
-                        :key="option" 
-                        :value="option" 
-                        :selected="option === id.state"
-                    >
-                        {{ option }}
-                    </SelectItem>
-                </SelectGroup>
-            </SelectContent>
-        </Select>
+    <Dialog>
+        <DialogTrigger asChild>
+            <Button variant="ghost" class="text-left w-fulls justify-start">
+                Prüfen
+            </Button>
+        </DialogTrigger>
+        <DialogContent class="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>Prüfen</DialogTitle>
+                <DialogDescription>
+                    Hier kann der Prüfstatus der Transaktion geändert werden.
+                </DialogDescription>
+            </DialogHeader>
+            <div>
+                <Select :defaultValue="id.state" class="w-full" v-model="state">
+                    <SelectTrigger>
+                        <SelectValue :value="id.state" :placeholder="id.state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>Status</SelectLabel>
+                            <SelectItem v-for="option in TransactionAuthStateOptions" :key="option" :value="option"
+                                :selected="option === id.state">
+                                {{ option }}
+                            </SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
 
-        <div class="flex items-center space-x-2 pt-4">
-            <p>Autorisieren? <Switch v-model="auth" /></p>
-        </div>
+                <div class="flex items-center space-x-2 pt-4">
+                    <p>Autorisieren?
+                        <Switch v-model="auth" />
+                    </p>
+                </div>
 
-        <div class="flex justify-end space-x-2 pt-4">
-            <DialogClose as-child>
-                <Button variant="outline">Abbrechen</Button>
-            </DialogClose>
-            <DialogClose as-child>
-                <Button
-                    :disabled="state === id.state && auth === props.id.acceptedby.includes(useUser().userId)"
-                    @click="pruefen"
-                >
-                    Bestätigen
-                </Button>
-            </DialogClose>
-        </div>
-    </div>
-    </DialogContent>
-</Dialog>
+                <div class="flex justify-end space-x-2 pt-4">
+                    <DialogClose as-child>
+                        <Button variant="outline">Abbrechen</Button>
+                    </DialogClose>
+                    <DialogClose as-child>
+                        <Button
+                            :disabled="state === id.state && auth === props.id.acceptedby.includes(useUser().userId)"
+                            @click="pruefen">
+                            Bestätigen
+                        </Button>
+                    </DialogClose>
+                </div>
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -80,11 +77,11 @@ function pruefen() {
         stateT = TransactionAuthStateOptions['In Bearbeitung'];
     }
 
-    
+
     if (auth.value != props.id.acceptedby.includes(useUser().userId) && state.value == TransactionAuthStateOptions['Autorisiert']) {
         stateT = TransactionAuthStateOptions['In Bearbeitung'];
     }
-    
+
 
     let data;
     if (auth.value) {

@@ -16,7 +16,7 @@ const isLoading = ref(false);
 async function handleLogin() {
     errorMessage.value = '';
     isLoading.value = true;
-    
+
     try {
         await pb.collection('users').authWithPassword(email.value, password.value);
         // Login erfolgreich, PocketBase wird die Weiterleitung übernehmen
@@ -41,20 +41,10 @@ async function handleLogin() {
                         {{ errorMessage }}
                     </div>
                     <div class="mb-4">
-                        <Input
-                            v-model="email"
-                            type="email"
-                            placeholder="E-Mail"
-                            required
-                        />
+                        <Input v-model="email" type="email" placeholder="E-Mail" required />
                     </div>
                     <div class="mb-4">
-                        <Input
-                            v-model="password"
-                            type="password"
-                            placeholder="Passwort"
-                            required
-                        />
+                        <Input v-model="password" type="password" placeholder="Passwort" required />
                     </div>
                     <Button type="submit" class="w-full" :disabled="isLoading">
                         {{ isLoading ? 'Anmelden...' : 'Anmelden' }}

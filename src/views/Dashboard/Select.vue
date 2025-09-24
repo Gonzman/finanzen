@@ -10,7 +10,7 @@ import { useUser } from '@/components/usePocketbase';
 import Overview from './overview/overview.vue';
 import { onMounted, onUnmounted, watch } from 'vue';
 import pb from '@/lib/pb';
-const props= defineProps({
+const props = defineProps({
     committee: {
         type: Object as () => Team,
         required: true,
@@ -48,7 +48,7 @@ const loadCurrentTabFromStorage = (): string => {
 // Load saved tab on component mount and emit if different from default
 onMounted(() => {
     pb.startSync();
-    
+
     const savedTab = loadCurrentTabFromStorage();
     if (savedTab !== props.currentTab) {
         emit('update:currentTab', savedTab);
@@ -70,22 +70,23 @@ onUnmounted(() => {
     <div class="flex items-center justify-between space-y-2">
         <h2 class="text-3xl font-bold tracking-tight">Dashboard</h2>
     </div>
-    <Tabs :model-value="props.currentTab" @update:model-value="(value) => emit('update:currentTab', value)" class="space-y-4 deep">
+    <Tabs :model-value="props.currentTab" @update:model-value="(value) => emit('update:currentTab', value)"
+        class="space-y-4 deep">
         <TabsList>
             <TabsTrigger value="overview"> Überblick </TabsTrigger>
             <TabsTrigger value="transactions"> Transaktionen </TabsTrigger>
             <TabsTrigger value="milestones"> Meilensteine </TabsTrigger>
-            <Separator orientation="vertical" class="m-2" v-if="props.committee.chair == user.userId"/>
-            <Creator v-if="props.committee.users?.includes(user.userId)" :committee="props.committee"/>
+            <Separator orientation="vertical" class="m-2" v-if="props.committee.chair == user.userId" />
+            <Creator v-if="props.committee.users?.includes(user.userId)" :committee="props.committee" />
         </TabsList>
         <TabsContent value="overview">
             <Overview :committee="props.committee" :key="props.committee.id"></Overview>
         </TabsContent>
         <TabsContent value="milestones">
-            <Milestones :committee="props.committee" :key="props.committee.id"/>
+            <Milestones :committee="props.committee" :key="props.committee.id" />
         </TabsContent>
         <TabsContent value="transactions">
-            <Transcactions :committee="props.committee" :key="props.committee.id"/>
+            <Transcactions :committee="props.committee" :key="props.committee.id" />
         </TabsContent>
     </Tabs>
 </template>

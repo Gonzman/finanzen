@@ -6,14 +6,14 @@ import pb from '@/lib/pb';
 import { ref, watch, computed, onMounted } from 'vue';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Button from '@/components/ui/button/Button.vue';
-import { TransactionAuthStateOptions, type TransactionAuthResponse, type TransactionResponse} from '@/lib/pocketbase-types';
+import { TransactionAuthStateOptions, type TransactionAuthResponse, type TransactionResponse } from '@/lib/pocketbase-types';
 import { usePocketBase } from '@/components/usePocketbase';
 import Edit from './modal/edit.vue';
 import Delete from './modal/delete.vue';
 import Details from './modal/details.vue';
 import MilestoneTransactionStats from '@/components/dashboard/MilestoneTransactionStats.vue';
 
-interface ExpandedTransaction{
+interface ExpandedTransaction {
     transactionAuth_via_transaction?: TransactionAuthResponse[];
 }
 
@@ -55,16 +55,16 @@ onMounted(fetchMilestoneTransactions);
 
 const getTotalAmount = (milestoneId: string): number => {
     if (!milestoneTransactions.value[milestoneId]) return 0;
-    
+
     return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: TransactionResponse<ExpandedTransaction>) => {
-        
+
         return total + transaction.amount;
     }, 0);
 };
 
 const getApprovedAmount = (milestoneId: string): number => {
     if (!milestoneTransactions.value[milestoneId]) return 0;
-    
+
     return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: TransactionResponse<ExpandedTransaction>) => {
         console.log('Checking transaction:', transaction.expand?.transactionAuth_via_transaction?.[0]?.state ?? 'undefined');
         if (transaction.expand?.transactionAuth_via_transaction?.[0]?.state === TransactionAuthStateOptions.Autorisiert) {
@@ -89,8 +89,8 @@ const filteredMilestones = computed(() => {
     }
 
     return milestones.value.filter((milestone) => {
-        return milestone.title.toLowerCase().includes(filter.value.toLowerCase()) || 
-               (milestone.message && milestone.message.toLowerCase().includes(filter.value.toLowerCase()));
+        return milestone.title.toLowerCase().includes(filter.value.toLowerCase()) ||
+            (milestone.message && milestone.message.toLowerCase().includes(filter.value.toLowerCase()));
     });
 });
 </script>
@@ -121,16 +121,16 @@ const filteredMilestones = computed(() => {
                 <TableCell>{{ milestone.message || '-' }}</TableCell>
                 <TableCell>{{ getTransactionCount(milestone.id) }}</TableCell>
                 <TableCell>
-                    <MilestoneTransactionStats 
-                        :milestoneId="milestone.id" 
-                        :transactions="milestoneTransactions[milestone.id] || []" 
-                    />
+                    <MilestoneTransactionStats :milestoneId="milestone.id"
+                        :transactions="milestoneTransactions[milestone.id] || []" />
                 </TableCell>
 
-                <TableCell class="text-right" :class="getApprovedAmount(milestone.id) < 0 ? 'text-red-500' : 'text-green-500'">
+                <TableCell class="text-right"
+                    :class="getApprovedAmount(milestone.id) < 0 ? 'text-red-500' : 'text-green-500'">
                     {{ getApprovedAmount(milestone.id).toFixed(2) }} €
                 </TableCell>
-                <TableCell class="text-right" :class="getTotalAmount(milestone.id) < 0 ? 'text-red-500' : 'text-green-500'">
+                <TableCell class="text-right"
+                    :class="getTotalAmount(milestone.id) < 0 ? 'text-red-500' : 'text-green-500'">
                     {{ getTotalAmount(milestone.id).toFixed(2) }} €
                 </TableCell>
                 <TableCell class="text-right w-0 p-0">
@@ -158,20 +158,23 @@ const filteredMilestones = computed(() => {
 
 <style scoped>
 .table {
-  display: table;
-  width: 100%;
-  border-collapse: collapse;
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
 }
+
 .table-row {
-  display: table-row;
+    display: table-row;
 }
+
 .table-cell {
-  display: table-cell;
-  padding: 8px;
-  border-bottom: 1px solid #e5e7eb;
+    display: table-cell;
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
 }
+
 .table-head {
-  font-weight: bold;
-  text-align: left;
+    font-weight: bold;
+    text-align: left;
 }
 </style>

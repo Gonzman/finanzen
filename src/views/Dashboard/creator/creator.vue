@@ -1,29 +1,30 @@
 <template>
-<Dialog>
-    <DialogTrigger as-child class="bg-blue-500 text-white px-4 py-2 rounded">
-        <Button>Erstellen</Button>
-    </DialogTrigger>
-    <DialogContent>
-        <Tabs>
-            <DialogHeader>
-                <DialogTitle>Erstellen</DialogTitle>
-                <DialogDescription>Erstellen Sie eine neue Transaktion oder einen neuen Meilenstein.</DialogDescription>
-            </DialogHeader>
-            <TabsList class="grid w-full grid-cols-2">
-                <TabsTrigger value="transaktion">Transkation</TabsTrigger>
-                <TabsTrigger value="meilenstein">Meilenstein</TabsTrigger>
-            </TabsList>
-            <TabsContent value="transaktion">
-                <div class="space-y-4">
-                    <TransactionFields :committee="props.committee"/>
-                </div>
-            </TabsContent>
-            <TabsContent value="meilenstein">
-                <MilestoneFileds :committee="props.committee"></MilestoneFileds>
-            </TabsContent>
-        </Tabs>
-    </DialogContent>
-</Dialog>
+    <Dialog>
+        <DialogTrigger as-child class="bg-blue-500 text-white px-4 py-2 rounded">
+            <Button>Erstellen</Button>
+        </DialogTrigger>
+        <DialogContent>
+            <Tabs>
+                <DialogHeader>
+                    <DialogTitle>Erstellen</DialogTitle>
+                    <DialogDescription>Erstellen Sie eine neue Transaktion oder einen neuen Meilenstein.
+                    </DialogDescription>
+                </DialogHeader>
+                <TabsList class="grid w-full grid-cols-2">
+                    <TabsTrigger value="transaktion">Transkation</TabsTrigger>
+                    <TabsTrigger value="meilenstein">Meilenstein</TabsTrigger>
+                </TabsList>
+                <TabsContent value="transaktion">
+                    <div class="space-y-4">
+                        <TransactionFields :committee="props.committee" />
+                    </div>
+                </TabsContent>
+                <TabsContent value="meilenstein">
+                    <MilestoneFileds :committee="props.committee"></MilestoneFileds>
+                </TabsContent>
+            </Tabs>
+        </DialogContent>
+    </Dialog>
 </template>
 
 <script setup lang="ts">

@@ -31,7 +31,7 @@ const availableTransactions = ref<TransactionResponse[]>([]);
 const transactionTitle = ref('');
 const transactionAmount = ref(0);
 const transactionDescription = ref('');
-const isExpense = ref(false); 
+const isExpense = ref(false);
 
 const client = usePocketBase();
 const user = useUser();
@@ -43,7 +43,7 @@ const fetchAvailableTransactions = async () => {
             filter: `ausschuss = "${props.committee.id}" && (milestone = null || milestone = "")`,
             sort: '-created',
         }); //FIXME: no fetch
-        
+
         availableTransactions.value = result;
     } catch (error) {
         console.error('Error fetching available transactions:', error);
@@ -131,13 +131,13 @@ onMounted(() => {
 
         <div class="border-t pt-4 mt-2">
             <h3 class="text-sm font-medium mb-2">Transaktionen hinzufügen</h3>
-            
+
             <Tabs v-model="transactionTab" class="w-full">
                 <TabsList class="grid w-full grid-cols-2">
                     <TabsTrigger value="add">Bestehende hinzufügen</TabsTrigger>
                     <TabsTrigger value="new">Neue erstellen</TabsTrigger>
                 </TabsList>
-                
+
                 <!-- Add existing transactions tab -->
                 <TabsContent value="add">
                     <div v-if="isLoading" class="py-4 text-center">
@@ -145,7 +145,7 @@ onMounted(() => {
                     </div>
                     <ScrollArea v-else-if="availableTransactions.length > 0" class="h-[200px] pr-4">
                         <div class="space-y-2 py-2">
-                            <div v-for="transaction in availableTransactions" :key="transaction.id" 
+                            <div v-for="transaction in availableTransactions" :key="transaction.id"
                                 class="flex items-center justify-between p-2 rounded hover:bg-muted cursor-pointer"
                                 :class="{ 'bg-muted': isSelected(transaction.id) }"
                                 @click="toggleSelection(transaction.id)">
@@ -154,12 +154,14 @@ onMounted(() => {
                                     <div class="text-sm text-muted-foreground">{{ transaction.message }}</div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <div :class="transaction.type === TransactionTypeOptions.Eingehend ? 'text-green-500' : 'text-red-500'">
+                                    <div
+                                        :class="transaction.type === TransactionTypeOptions.Eingehend ? 'text-green-500' : 'text-red-500'">
                                         {{ transaction.amount }} €
                                     </div>
-                                    <div class="w-5 h-5 rounded-full border flex items-center justify-center" 
+                                    <div class="w-5 h-5 rounded-full border flex items-center justify-center"
                                         :class="{ 'bg-primary border-primary': isSelected(transaction.id), 'border-muted-foreground': !isSelected(transaction.id) }">
-                                        <div v-if="isSelected(transaction.id)" class="w-2 h-2 bg-white rounded-full"></div>
+                                        <div v-if="isSelected(transaction.id)" class="w-2 h-2 bg-white rounded-full">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -169,7 +171,7 @@ onMounted(() => {
                         Keine verfügbaren Transaktionen gefunden.
                     </div>
                 </TabsContent>
-                
+
                 <TabsContent value="new">
                     <div class="grid gap-4 py-2">
                         <div class="flex items-center gap-2">
@@ -178,15 +180,18 @@ onMounted(() => {
                         </div>
                         <div class="grid gap-2">
                             <Label for="transaction-title">Titel</Label>
-                            <Input id="transaction-title" placeholder="Titel der Transaktion" v-model="transactionTitle" />
+                            <Input id="transaction-title" placeholder="Titel der Transaktion"
+                                v-model="transactionTitle" />
                         </div>
                         <div class="grid gap-2">
                             <Label for="amount">Betrag (€)</Label>
-                            <Input id="amount" type="number" placeholder="0.00" min="0" inputmode="numeric" v-model="transactionAmount" />
+                            <Input id="amount" type="number" placeholder="0.00" min="0" inputmode="numeric"
+                                v-model="transactionAmount" />
                         </div>
                         <div class="grid gap-2">
                             <Label for="transaction-description">Beschreibung</Label>
-                            <Textarea id="transaction-description" placeholder="Beschreibung der Transaktion..." v-model="transactionDescription" />
+                            <Textarea id="transaction-description" placeholder="Beschreibung der Transaktion..."
+                                v-model="transactionDescription" />
                         </div>
                     </div>
                 </TabsContent>

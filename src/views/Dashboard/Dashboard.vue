@@ -21,7 +21,8 @@ const currentTab = ref('overview');
             </div>
         </div>
         <div class="flex-1 space-y-4 p-8 pt-24">
-            <Select v-if="committee && committee.id" :committee="committee" v-model:currentTab="currentTab" :key="committee.id" />
+            <Select v-if="committee && committee.id" :committee="committee" v-model:currentTab="currentTab"
+                :key="committee.id" />
         </div>
         <div class="flex-1 space-y-4 p-8 pt-6">{{ committee?.id ?? "" }}</div>
     </div>

@@ -34,7 +34,7 @@ function createTransaction() {
         showAmountError.value = true;
         return;
     }
-    
+
     showAmountError.value = false;
 
     const data = {
@@ -50,18 +50,18 @@ function createTransaction() {
     pocketbase.collection('transaction').create(data).then(() => {
         title.value = '';
         description.value = '';
-        amount.value = 0;   
+        amount.value = 0;
     }).catch((error) => {
         console.error('Error creating transaction:', error);
     });
 }
 
-function changeImage(event: Event){
-  
+function changeImage(event: Event) {
+
     const files = (event.target as HTMLInputElement).files;
     if (files) {
         images.value = Array.from(files)
-    }   
+    }
 }
 
 function clearImage() {
@@ -69,7 +69,7 @@ function clearImage() {
 }
 
 const isValid = computed(() => {
-    return title.value.length > 0 && amount.value > 0 ;
+    return title.value.length > 0 && amount.value > 0;
 });
 
 </script>
@@ -77,30 +77,27 @@ const isValid = computed(() => {
 <template>
     <div class="flex flex-col space-y-4">
         <div class="flex flex-col  items-center space-x-2">
-            <Label>Ist eine ausgabe? <Switch v-model="ausgabe"/></Label>
-            
+            <Label>Ist eine ausgabe?
+                <Switch v-model="ausgabe" />
+            </Label>
+
         </div>
 
         <Label>Titel<span class="text-red-500">*</span></Label>
         <Input placeholder="Titel" v-model.trim="title" />
 
         <Label>Betrag<span class="text-red-500">*</span></Label>
-        <Input
-            placeholder="Betrag"
-            v-model.number="amount"
-            inputmode="numeric"
-            type="number" 
-            @input="showAmountError = false"
-        />
+        <Input placeholder="Betrag" v-model.number="amount" inputmode="numeric" type="number"
+            @input="showAmountError = false" />
         <div v-if="showAmountError" class="text-red-500 text-sm">Betrag muss größer als 0 sein</div>
-        
+
         <Label>Beschreibung</Label>
         <Textarea placeholder="Beschreibung" v-model.trim="description"></Textarea>
 
         <div>
             <Label>Belege</Label>
             <div class="flex flex-row justify-end space-x-2">
-                <Input type="file" multiple @change="changeImage"/>  
+                <Input type="file" multiple @change="changeImage" />
                 <Button variant="destructive" size="icon" @click="() => clearImage()" :disabled="!images">X</Button>
             </div>
         </div>

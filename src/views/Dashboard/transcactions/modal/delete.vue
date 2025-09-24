@@ -13,7 +13,7 @@ const props = defineProps({
 });
 
 
-function deleteTransaction() {  
+function deleteTransaction() {
 
     usePocketBase().collection('transaction').delete(props.id.id).then(() => {
         console.log('Transaction deleted successfully');
@@ -28,30 +28,31 @@ function deleteTransaction() {
 
 <template>
     <Dialog>
-    <DialogTrigger asChild>
-    <Button variant="destructive" class="text-left w-fulls justify-start" :disabled="!(props.id.createdby === useUser().userId)">
-        Löschen
-    </Button>
-    </DialogTrigger>
-    <DialogContent class="sm:max-w-[425px]">
-    <DialogHeader>
-        <DialogTitle>Transaktion</DialogTitle>
-        <DialogDescription>
-        Soll die Transaktion wirklich gelöscht werden?
-        </DialogDescription>
-    </DialogHeader>
-    <div>
-        <DialogClose asChild>
-            <Button variant="destructive" class="w-full" @click="deleteTransaction">
+        <DialogTrigger asChild>
+            <Button variant="destructive" class="text-left w-fulls justify-start"
+                :disabled="!(props.id.createdby === useUser().userId)">
                 Löschen
             </Button>
-        </DialogClose>
-        <DialogClose asChild>
-            <Button variant="outline" class="w-full">
-                Abbrechen
-            </Button>
-        </DialogClose>
-    </div>
-    </DialogContent>
-</Dialog>
+        </DialogTrigger>
+        <DialogContent class="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>Transaktion</DialogTitle>
+                <DialogDescription>
+                    Soll die Transaktion wirklich gelöscht werden?
+                </DialogDescription>
+            </DialogHeader>
+            <div>
+                <DialogClose asChild>
+                    <Button variant="destructive" class="w-full" @click="deleteTransaction">
+                        Löschen
+                    </Button>
+                </DialogClose>
+                <DialogClose asChild>
+                    <Button variant="outline" class="w-full">
+                        Abbrechen
+                    </Button>
+                </DialogClose>
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>

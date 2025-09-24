@@ -21,8 +21,6 @@ client.authStore.onChange(() => {
 
 export const usePocketBase = () => client;
 
-
-
 class User {
     private static instance: User;
     private static _isInitialized = ref(false);
@@ -31,7 +29,7 @@ class User {
     private email!: string;
     private committe = ref<AusschussRecord[]>([]);
     private image: Ref<string | null> = ref(null);
-    private pruefer!: boolean
+    private pruefer!: boolean;
 
     private constructor() {
         if (!client.authStore.record) {
@@ -134,7 +132,6 @@ class User {
     static get isInitialized() {
         return User._isInitialized;
     }
-
 }
 
 function shortName(name: string) {
