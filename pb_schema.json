@@ -125,9 +125,7 @@
         },
         "passwordAuth": {
             "enabled": true,
-            "identityFields": [
-                "email"
-            ]
+            "identityFields": ["email"]
         },
         "mfa": {
             "enabled": false,
@@ -174,8 +172,8 @@
     {
         "id": "_pb_users_auth_",
         "listRule": "id = @request.auth.id",
-        "viewRule": "id = @request.auth.id",
-        "createRule": "",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": null,
         "updateRule": "id = @request.auth.id",
         "deleteRule": "id = @request.auth.id",
         "name": "users",
@@ -270,13 +268,7 @@
                 "id": "file376926767",
                 "maxSelect": 1,
                 "maxSize": 0,
-                "mimeTypes": [
-                    "image/jpeg",
-                    "image/png",
-                    "image/svg+xml",
-                    "image/gif",
-                    "image/webp"
-                ],
+                "mimeTypes": [],
                 "name": "avatar",
                 "presentable": false,
                 "protected": false,
@@ -289,6 +281,15 @@
                 "hidden": false,
                 "id": "bool2251858097",
                 "name": "isPruefer",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "bool"
+            },
+            {
+                "hidden": false,
+                "id": "bool4145639761",
+                "name": "isVerifed",
                 "presentable": false,
                 "required": false,
                 "system": false,
@@ -341,10 +342,7 @@
         },
         "passwordAuth": {
             "enabled": true,
-            "identityFields": [
-                "email",
-                "name"
-            ]
+            "identityFields": ["email", "name"]
         },
         "mfa": {
             "enabled": false,
@@ -876,9 +874,9 @@
         "id": "pbc_730293530",
         "listRule": "@request.auth.isPruefer = true || ausschuss.users.id ?= @request.auth.id",
         "viewRule": "@request.auth.isPruefer = true || ausschuss.users.id ?= @request.auth.id",
-        "createRule": "@collection.ausschuss.chair ?= @request.auth.id",
+        "createRule": "@collection.ausschuss.users.id ?= @request.auth.id",
         "updateRule": "createdby.id = @request.auth.id",
-        "deleteRule": null,
+        "deleteRule": "createdby.id = @request.auth.id",
         "name": "milestone",
         "type": "base",
         "fields": [
@@ -977,8 +975,8 @@
     {
         "id": "pbc_3251355826",
         "listRule": "@request.auth.isPruefer = true || ausschuss.users.id ?= @request.auth.id",
-        "viewRule": "@request.auth.isPruefer = true || ausschuss.users.id ?= @request.auth.id",
-        "createRule": "@collection.ausschuss.chair ?= @request.auth.id",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@collection.ausschuss.users.id ?= @request.auth.id",
         "updateRule": "(@request.auth.id = createdby || @request.auth.id = ausschuss.chair.id ) && (transactionAuth_via_transaction.state != \"Autorisiert\" && transactionAuth_via_transaction.state != \"Abgeschlossen\" && transactionAuth_via_transaction.state != \"Abgelehnt\")\n",
         "deleteRule": "(@request.auth.id = createdby || @request.auth.id = ausschuss.chair.id ) && (transactionAuth_via_transaction.state != \"Autorisiert\" && transactionAuth_via_transaction.state != \"Abgeschlossen\" && transactionAuth_via_transaction.state != \"Abgelehnt\")",
         "name": "transaction",
@@ -1073,10 +1071,7 @@
                 "required": true,
                 "system": false,
                 "type": "select",
-                "values": [
-                    "Ausgehend",
-                    "Eingehend"
-                ]
+                "values": ["Ausgehend", "Eingehend"]
             },
             {
                 "cascadeDelete": false,
@@ -1096,13 +1091,7 @@
                 "id": "file3666391351",
                 "maxSelect": 99,
                 "maxSize": 0,
-                "mimeTypes": [
-                    "image/jpeg",
-                    "image/png",
-                    "image/svg+xml",
-                    "image/gif",
-                    "image/webp"
-                ],
+                "mimeTypes": [],
                 "name": "recipe",
                 "presentable": false,
                 "protected": true,
@@ -1137,8 +1126,8 @@
     },
     {
         "id": "pbc_2156879558",
-        "listRule": "(@request.auth.id != \"\" && transaction.ausschuss.users.id ?= @request.auth.id) || @request.auth.isPruefer = true",
-        "viewRule": "(@request.auth.id != \"\" && transaction.ausschuss.users.id ?= @request.auth.id) || @request.auth.isPruefer = true",
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "(@request.auth.verified = true && transaction.ausschuss.users.id ?= @request.auth.id) || @request.auth.isPruefer = true",
         "createRule": null,
         "updateRule": "@request.auth.isPruefer = true",
         "deleteRule": null,
@@ -1234,5 +1223,44 @@
         ],
         "indexes": [],
         "system": false
+    },
+    {
+        "id": "pbc_2615786740",
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "name": "budget",
+        "type": "view",
+        "fields": [
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "text3208210256",
+                "max": 0,
+                "min": 0,
+                "name": "id",
+                "pattern": "^[a-z0-9]+$",
+                "presentable": false,
+                "primaryKey": true,
+                "required": true,
+                "system": true,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "json1945302907",
+                "maxSize": 1,
+                "name": "budget",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            }
+        ],
+        "indexes": [],
+        "system": false,
+        "viewQuery": "SELECT\n  'overall' AS id,\n  COALESCE(SUM(CAST(t.amount AS REAL)), 0) AS budget\nFROM \"transactionAuth\" AS ta\nLEFT JOIN \"transaction\"        AS t  ON ta.\"transaction\" = t.id\nWHERE\n  ta.state = 'Autorisiert'\n  OR (ta.state = 'In Bearbeitung' AND t.type = 'Ausgehend');\n"
     }
 ]

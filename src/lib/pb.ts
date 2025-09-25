@@ -156,31 +156,19 @@ class pb {
         let budget = 0;
         try {
             const authorizedResult = await this.client
-                .collection('transactionAuth')
-                .getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                    sort: '-updated',
-                    expand: 'transaction, transaction.createdby',
-                    filter: `state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`,
-                });
+                .collection('budget')
+                .getFullList();
 
             for (const item of authorizedResult) {
-                budget += item.expand?.transaction.amount ?? 0;
-            }
-
-            const inProgressResult = await this.client
-                .collection('transactionAuth')
-                .getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                    sort: '-updated',
-                    expand: 'transaction, transaction.createdby',
-                    filter: `state = "${TransactionAuthStateOptions['In Bearbeitung']}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`,
-                });
-
-            for (const item of inProgressResult) {
-                budget += item.expand?.transaction.amount ?? 0;
+                if (item.id == 'overall') {
+                    budget += Number(item.budget) || 0;
+                }
             }
         } catch (error) {
             console.error('Error fetching budget:', error);
         }
+
+        console.log('Overall Budget:', budget);
         return budget;
     }
 
