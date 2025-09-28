@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { computed, ref, type PropType } from 'vue';
-import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse, type TransactionResponse } from '@/lib/pocketbase-types';
+import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse } from '@/lib/pocketbase-types';
 import Switch from '@/components/ui/switch/Switch.vue';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
 import type { ExpandTransaction } from '@/lib/pb';
@@ -62,13 +62,24 @@ function changeImage(event: Event) {
         images.value = Array.from(target.files);
     }
 }
+
+function isUserChairOfCommittee(): boolean {
+    if (!props.id.expand?.transaction?.ausschuss) return false;
+
+    const committees = useUser().getCommitteList();
+    const transactionCommittee = committees.value.find(
+        committee => committee.id === props.id.expand?.transaction.ausschuss
+    );
+
+    return transactionCommittee?.chair === useUser().userId;
+}
 </script>
 
 <template>
     <Dialog>
         <DialogTrigger asChild>
             <Button variant="ghost" class="text-left w-fulls justify-start" :disabled="!props.id.expand?.transaction?.createdby ||
-                props.id.expand.transaction.createdby !== useUser().userId ||
+                (props.id.expand.transaction.createdby !== useUser().userId && !isUserChairOfCommittee()) ||
                 props.id.state === TransactionAuthStateOptions.Autorisiert ||
                 props.id.state === TransactionAuthStateOptions.Abgeschlossen">
                 Bearbeiten
