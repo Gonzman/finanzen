@@ -13,7 +13,7 @@ import Pruefen from './modal/pruefen.vue';
 import Details from './modal/details.vue';
 import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse } from '@/lib/pocketbase-types';
 import TransactionStateIcon from '@/components/dashboard/TransactionStateIcon.vue';
-import { formatCurrency } from '@/ts/format';
+import { formatCurrency, formatTransaction } from '@/ts/format';
 
 const props = defineProps({
   committee: {
@@ -47,20 +47,7 @@ const filteredTransaction = computed(() => {
 });
 
 // Format transaction amount with styling
-const formatTransaction = (amount: number, type: string) => {
-  const isIncoming = type === TransactionTypeOptions.Eingehend;
-  const formattedAmount = formatCurrency(amount);
 
-  const shortDisplay = isIncoming ? `+${amount}€` : `-${amount}€`;
-
-  return {
-    shortDisplay,
-    formattedAmount,
-    bgColor: isIncoming ? 'bg-green-100' : 'bg-red-100',
-    textColor: isIncoming ? 'text-green-700' : 'text-red-700',
-    isIncoming
-  };
-};
 
 function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: string) {
   return t.expand?.transaction.title.toLowerCase().includes(filter.toLowerCase()) ||

@@ -125,7 +125,9 @@
         },
         "passwordAuth": {
             "enabled": true,
-            "identityFields": ["email"]
+            "identityFields": [
+                "email"
+            ]
         },
         "mfa": {
             "enabled": false,
@@ -342,7 +344,10 @@
         },
         "passwordAuth": {
             "enabled": true,
-            "identityFields": ["email", "name"]
+            "identityFields": [
+                "email",
+                "name"
+            ]
         },
         "mfa": {
             "enabled": false,
@@ -975,7 +980,7 @@
     {
         "id": "pbc_3251355826",
         "listRule": "@request.auth.isPruefer = true || ausschuss.users.id ?= @request.auth.id",
-        "viewRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.isPruefer = true || ausschuss.users.id ?= @request.auth.id",
         "createRule": "@collection.ausschuss.users.id ?= @request.auth.id",
         "updateRule": "(@request.auth.id = createdby || @request.auth.id = ausschuss.chair.id ) && (transactionAuth_via_transaction.state != \"Autorisiert\" && transactionAuth_via_transaction.state != \"Abgeschlossen\" && transactionAuth_via_transaction.state != \"Abgelehnt\")\n",
         "deleteRule": "(@request.auth.id = createdby || @request.auth.id = ausschuss.chair.id ) && (transactionAuth_via_transaction.state != \"Autorisiert\" && transactionAuth_via_transaction.state != \"Abgeschlossen\" && transactionAuth_via_transaction.state != \"Abgelehnt\")",
@@ -1071,7 +1076,10 @@
                 "required": true,
                 "system": false,
                 "type": "select",
-                "values": ["Ausgehend", "Eingehend"]
+                "values": [
+                    "Ausgehend",
+                    "Eingehend"
+                ]
             },
             {
                 "cascadeDelete": false,
@@ -1126,7 +1134,7 @@
     },
     {
         "id": "pbc_2156879558",
-        "listRule": "@request.auth.id != \"\"",
+        "listRule": "(@request.auth.verified = true && transaction.ausschuss.users.id ?= @request.auth.id) || @request.auth.isPruefer = true",
         "viewRule": "(@request.auth.verified = true && transaction.ausschuss.users.id ?= @request.auth.id) || @request.auth.isPruefer = true",
         "createRule": null,
         "updateRule": "@request.auth.isPruefer = true",
@@ -1262,5 +1270,193 @@
         "indexes": [],
         "system": false,
         "viewQuery": "SELECT\n  'overall' AS id,\n  COALESCE(SUM(CAST(t.amount AS REAL)), 0) AS budget\nFROM \"transactionAuth\" AS ta\nLEFT JOIN \"transaction\"        AS t  ON ta.\"transaction\" = t.id\nWHERE\n  ta.state = 'Autorisiert'\n  OR (ta.state = 'In Bearbeitung' AND t.type = 'Ausgehend');\n"
+    },
+    {
+        "id": "pbc_1160206898",
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "name": "overview_transaction",
+        "type": "view",
+        "fields": [
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "text3208210256",
+                "max": 0,
+                "min": 0,
+                "name": "id",
+                "pattern": "^[a-z0-9]+$",
+                "presentable": false,
+                "primaryKey": true,
+                "required": true,
+                "system": true,
+                "type": "text"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_3251355826",
+                "hidden": false,
+                "id": "relation801164047",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "transaction_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_NUs5",
+                "max": 0,
+                "min": 0,
+                "name": "title",
+                "pattern": "",
+                "presentable": false,
+                "primaryKey": false,
+                "required": true,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_DVg0",
+                "max": null,
+                "min": null,
+                "name": "amount",
+                "onlyInt": false,
+                "presentable": false,
+                "required": true,
+                "system": false,
+                "type": "number"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_MPIS",
+                "maxSelect": 1,
+                "name": "type",
+                "presentable": false,
+                "required": true,
+                "system": false,
+                "type": "select",
+                "values": [
+                    "Ausgehend",
+                    "Eingehend"
+                ]
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_DEAM",
+                "max": 0,
+                "min": 0,
+                "name": "message",
+                "pattern": "",
+                "presentable": false,
+                "primaryKey": false,
+                "required": false,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_byI9",
+                "name": "transaction_created",
+                "onCreate": true,
+                "onUpdate": false,
+                "presentable": false,
+                "system": false,
+                "type": "autodate"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_8z0L",
+                "name": "transaction_updated",
+                "onCreate": true,
+                "onUpdate": true,
+                "presentable": false,
+                "system": false,
+                "type": "autodate"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_2156879558",
+                "hidden": false,
+                "id": "relation2156036508",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "auth_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_33Ra",
+                "name": "accepted",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "bool"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "_pb_users_auth_",
+                "hidden": false,
+                "id": "_clone_BTSo",
+                "maxSelect": 999,
+                "minSelect": 0,
+                "name": "acceptedby",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_Havj",
+                "maxSelect": 1,
+                "name": "auth_state",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "select",
+                "values": [
+                    "Ausstehend",
+                    "In Bearbeitung",
+                    "Autorisiert",
+                    "Abgeschlossen",
+                    "Abgelehnt"
+                ]
+            },
+            {
+                "hidden": false,
+                "id": "_clone_wz8F",
+                "name": "auth_created",
+                "onCreate": true,
+                "onUpdate": false,
+                "presentable": false,
+                "system": false,
+                "type": "autodate"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_ZvUp",
+                "name": "auth_updated",
+                "onCreate": true,
+                "onUpdate": true,
+                "presentable": false,
+                "system": false,
+                "type": "autodate"
+            }
+        ],
+        "indexes": [],
+        "system": false,
+        "viewQuery": "SELECT\n  t.id AS id,\n  t.id AS transaction_id,\n  t.title,\n  t.amount,\n  t.type,\n  t.message,\n  t.created AS transaction_created,\n  t.updated AS transaction_updated,\n  a.id AS auth_id,\n  a.accepted,\n  a.acceptedby,\n  a.state AS auth_state,\n  a.created AS auth_created,\n  a.updated AS auth_updated\nFROM \"transaction\" AS t\nLEFT JOIN \"transactionAuth\" AS a\n  ON a.\"transaction\" = t.id;\n"
     }
 ]
