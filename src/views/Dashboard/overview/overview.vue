@@ -23,7 +23,7 @@
     <TableCaption>Liste aller Transaktionen</TableCaption>
     <TableHeader>
       <TableRow>
-        <TableHead class="w-[100px]">Ausschuss</TableHead>
+        <TableHead class="w-[100px]">Gremium</TableHead>
         <TableHead>Name</TableHead>
         <TableHead>Status</TableHead>
         <TableHead>Art</TableHead>
