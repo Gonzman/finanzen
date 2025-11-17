@@ -195,7 +195,6 @@ export type UsersRecord = {
     emailVisibility?: boolean;
     id: string;
     isPruefer?: boolean;
-    isVerifed?: boolean;
     name?: string;
     password: string;
     tokenKey: string;
