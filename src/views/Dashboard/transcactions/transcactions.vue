@@ -115,7 +115,7 @@ function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: stri
                 <Pruefen :id="invoice" v-if="useUser().isPruefer()" />
                 <Edit :id="invoice"
                   v-if="invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
-                <Delete :id="invoice.expand!.transaction"
+                <Delete :id="invoice"
                   v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
                 <DropdownMenuSeparator
                   v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />

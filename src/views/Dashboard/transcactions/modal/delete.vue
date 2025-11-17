@@ -2,12 +2,14 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { type PropType } from 'vue';
-import type { TransactionResponse } from '@/lib/pocketbase-types';
+import type { TransactionAuthResponse } from '@/lib/pocketbase-types';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
+import { isUserChairOfCommittee } from '@/lib/utils';
+import type { ExpandTransaction } from '@/lib/pb';
 
 const props = defineProps({
     id: {
-        type: Object as PropType<TransactionResponse>,
+        type: Object as PropType<TransactionAuthResponse<ExpandTransaction>>,
         required: true,
     },
 });
@@ -30,7 +32,7 @@ function deleteTransaction() {
     <Dialog>
         <DialogTrigger asChild>
             <Button variant="destructive" class="text-left w-fulls justify-start"
-                :disabled="!(props.id.createdby === useUser().userId)">
+                :disabled="!(props.id.expand.transaction.createdby === useUser().userId && !isUserChairOfCommittee(props) && !useUser().isPruefer())">
                 Löschen
             </Button>
         </DialogTrigger>

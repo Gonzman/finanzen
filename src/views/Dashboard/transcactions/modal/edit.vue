@@ -9,6 +9,7 @@ import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAu
 import Switch from '@/components/ui/switch/Switch.vue';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
 import type { ExpandTransaction } from '@/lib/pb';
+import { isUserChairOfCommittee } from '@/lib/utils';
 
 const props = defineProps({
     id: {
@@ -63,23 +64,13 @@ function changeImage(event: Event) {
     }
 }
 
-function isUserChairOfCommittee(): boolean {
-    if (!props.id.expand?.transaction?.ausschuss) return false;
-
-    const committees = useUser().getCommitteList();
-    const transactionCommittee = committees.value.find(
-        committee => committee.id === props.id.expand?.transaction.ausschuss
-    );
-
-    return transactionCommittee?.chair === useUser().userId;
-}
 </script>
 
 <template>
     <Dialog>
         <DialogTrigger asChild>
             <Button variant="ghost" class="text-left w-fulls justify-start" :disabled="!props.id.expand?.transaction?.createdby ||
-                (props.id.expand.transaction.createdby !== useUser().userId && !isUserChairOfCommittee()) ||
+                (props.id.expand.transaction.createdby !== useUser().userId && !isUserChairOfCommittee(props) && !useUser().isPruefer()) ||
                 props.id.state === TransactionAuthStateOptions.Autorisiert ||
                 props.id.state === TransactionAuthStateOptions.Abgeschlossen">
                 Bearbeiten
