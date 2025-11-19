@@ -10,7 +10,7 @@ import { useUser } from '@/components/usePocketbase';
 import Overview from './overview/overview.vue';
 import { onMounted, onUnmounted, watch } from 'vue';
 import pb from '@/lib/pb';
-import Workplanner from './workplanner/Workplanner.vue';
+import Workplanner from './workplanner/workplanner.vue';
 const props = defineProps({
     committee: {
         type: Object as () => Team,
@@ -76,8 +76,8 @@ onUnmounted(() => {
         <TabsList>
             <TabsTrigger value="overview"> Überblick </TabsTrigger>
             <TabsTrigger value="transactions"> Transaktionen </TabsTrigger>
-            <TabsTrigger value="milestones"> Meilensteine </TabsTrigger>
             <TabsTrigger value="workplanner"> Arbeitsplaner </TabsTrigger>
+            <TabsTrigger value="milestones"> Meilensteine </TabsTrigger>
 
             <Separator orientation="vertical" class="m-2" v-if="props.committee.chair == user.userId" />
             <Creator v-if="props.committee.users?.includes(user.userId)" :committee="props.committee" />
