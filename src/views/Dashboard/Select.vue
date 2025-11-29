@@ -11,6 +11,7 @@ import Overview from './overview/overview.vue';
 import { onMounted, onUnmounted, watch } from 'vue';
 import pb from '@/lib/pb';
 import Workplanner from './workplanner/workplanner.vue';
+import Test from './workplanner/test.vue';
 const props = defineProps({
     committee: {
         type: Object as () => Team,
@@ -92,6 +93,7 @@ onUnmounted(() => {
             <Transcactions :committee="props.committee" :key="props.committee.id" />
         </TabsContent>
         <TabsContent value="workplanner">
+            <Test></Test>
             <Workplanner :committee="props.committee" :key="props.committee.id" />
         </TabsContent>
     </Tabs>
