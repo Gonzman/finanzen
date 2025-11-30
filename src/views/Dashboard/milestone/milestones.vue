@@ -53,26 +53,37 @@ watch(milestones, fetchMilestoneTransactions, { deep: true });
 
 onMounted(fetchMilestoneTransactions);
 
-const getTotalAmount = (milestoneId: string): number => {
-    if (!milestoneTransactions.value[milestoneId]) return 0;
+const getTotalAmount = (milestoneId: string): { konto: number; bar: number } => {
+    if (!milestoneTransactions.value[milestoneId]) return { konto: 0, bar: 0 };
 
-    return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: TransactionResponse<ExpandedTransaction>) => {
-
-        return total + transaction.amount;
-    }, 0);
+    return milestoneTransactions.value[milestoneId].reduce(
+        (total: { konto: number; bar: number }, transaction: TransactionResponse<ExpandedTransaction>) => {
+            return {
+                konto: total.konto + (transaction.amount || 0),
+                bar: total.bar + (transaction.amount_bar || 0)
+            };
+        },
+        { konto: 0, bar: 0 }
+    );
 };
 
-const getApprovedAmount = (milestoneId: string): number => {
-    if (!milestoneTransactions.value[milestoneId]) return 0;
+const getApprovedAmount = (milestoneId: string): { konto: number; bar: number } => {
+    if (!milestoneTransactions.value[milestoneId]) return { konto: 0, bar: 0 };
 
-    return milestoneTransactions.value[milestoneId].reduce((total: number, transaction: TransactionResponse<ExpandedTransaction>) => {
-        console.log('Checking transaction:', transaction.expand?.transactionAuth_via_transaction?.[0]?.state ?? 'undefined');
-        if (transaction.expand?.transactionAuth_via_transaction?.[0]?.state === TransactionAuthStateOptions.Autorisiert) {
-            console.log('Adding approved transaction:', transaction);
-            return total + transaction.amount;
-        }
-        return total;
-    }, 0);
+    return milestoneTransactions.value[milestoneId].reduce(
+        (total: { konto: number; bar: number }, transaction: TransactionResponse<ExpandedTransaction>) => {
+            console.log('Checking transaction:', transaction.expand?.transactionAuth_via_transaction?.[0]?.state ?? 'undefined');
+            if (transaction.expand?.transactionAuth_via_transaction?.[0]?.state === TransactionAuthStateOptions.Autorisiert) {
+                console.log('Adding approved transaction:', transaction);
+                return {
+                    konto: total.konto + (transaction.amount || 0),
+                    bar: total.bar + (transaction.amount_bar || 0)
+                };
+            }
+            return total;
+        },
+        { konto: 0, bar: 0 }
+    );
 };
 
 
@@ -108,8 +119,10 @@ const filteredMilestones = computed(() => {
                 <TableHead>Beschreibung</TableHead>
                 <TableHead>Anzahl Transaktionen</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead class="text-right">Summe: Genehmigt</TableHead>
-                <TableHead class="text-right">Summe</TableHead>
+                <TableHead class="text-right">Genehmigt (Konto)</TableHead>
+                <TableHead class="text-right">Genehmigt (Bar)</TableHead>
+                <TableHead class="text-right">Summe (Konto)</TableHead>
+                <TableHead class="text-right">Summe (Bar)</TableHead>
                 <TableHead class="w-0 p-0"></TableHead>
             </TableRow>
         </TableHeader>
@@ -126,12 +139,20 @@ const filteredMilestones = computed(() => {
                 </TableCell>
 
                 <TableCell class="text-right"
-                    :class="getApprovedAmount(milestone.id) < 0 ? 'text-red-500' : 'text-green-500'">
-                    {{ getApprovedAmount(milestone.id).toFixed(2) }} €
+                    :class="getApprovedAmount(milestone.id).konto < 0 ? 'text-red-500' : 'text-green-500'">
+                    {{ getApprovedAmount(milestone.id).konto.toFixed(2) }} €
                 </TableCell>
                 <TableCell class="text-right"
-                    :class="getTotalAmount(milestone.id) < 0 ? 'text-red-500' : 'text-green-500'">
-                    {{ getTotalAmount(milestone.id).toFixed(2) }} €
+                    :class="getApprovedAmount(milestone.id).bar < 0 ? 'text-red-500' : 'text-green-500'">
+                    {{ getApprovedAmount(milestone.id).bar.toFixed(2) }} €
+                </TableCell>
+                <TableCell class="text-right"
+                    :class="getTotalAmount(milestone.id).konto < 0 ? 'text-red-500' : 'text-green-500'">
+                    {{ getTotalAmount(milestone.id).konto.toFixed(2) }} €
+                </TableCell>
+                <TableCell class="text-right"
+                    :class="getTotalAmount(milestone.id).bar < 0 ? 'text-red-500' : 'text-green-500'">
+                    {{ getTotalAmount(milestone.id).bar.toFixed(2) }} €
                 </TableCell>
                 <TableCell class="text-right w-0 p-0">
                     <DropdownMenu>

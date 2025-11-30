@@ -42,10 +42,16 @@ const transactionObjects = computed((): TransactionAuthResponse<ExpandTransactio
 });
 
 // Calculate total amount for the milestone
-const totalAmount = computed((): number => {
-    return transactions.value.reduce((total: number, transaction: TransactionAuthResponse<ExpandTransaction>) => {
-        return total + (transaction.expand?.transaction?.amount || 0);
-    }, 0);
+const totalAmount = computed((): { konto: number; bar: number } => {
+    return transactions.value.reduce(
+        (total: { konto: number; bar: number }, transaction: TransactionAuthResponse<ExpandTransaction>) => {
+            return {
+                konto: total.konto + (transaction.expand?.transaction?.amount || 0),
+                bar: total.bar + (transaction.expand?.transaction?.amount_bar || 0)
+            };
+        },
+        { konto: 0, bar: 0 }
+    );
 });
 
 </script>
@@ -78,9 +84,15 @@ const totalAmount = computed((): number => {
                             <div class="font-medium">{{ transactions.length }}</div>
                         </div>
                         <div>
-                            <div class="text-sm text-muted-foreground">Gesamtsumme</div>
-                            <div class="font-medium" :class="totalAmount < 0 ? 'text-red-500' : 'text-green-500'">
-                                {{ totalAmount.toFixed(2) }} €
+                            <div class="text-sm text-muted-foreground">Summe Konto</div>
+                            <div class="font-medium" :class="totalAmount.konto < 0 ? 'text-red-500' : 'text-green-500'">
+                                {{ totalAmount.konto.toFixed(2) }} €
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-muted-foreground">Summe Bar</div>
+                            <div class="font-medium" :class="totalAmount.bar < 0 ? 'text-red-500' : 'text-green-500'">
+                                {{ totalAmount.bar.toFixed(2) }} €
                             </div>
                         </div>
                     </div>
@@ -134,9 +146,13 @@ const totalAmount = computed((): number => {
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div v-if="transaction.expand?.transaction" class="text-right font-medium" 
-                                                :class="(transaction.expand.transaction.amount || 0) < 0 ? 'text-red-500' : 'text-green-500'">
-                                                {{ (transaction.expand.transaction.amount || 0).toFixed(2) }} €
+                                            <div v-if="transaction.expand?.transaction" class="text-right font-medium">
+                                                <div :class="(transaction.expand.transaction.amount || 0) < 0 ? 'text-red-500' : 'text-green-500'">
+                                                    K: {{ (transaction.expand.transaction.amount || 0).toFixed(2) }} €
+                                                </div>
+                                                <div :class="(transaction.expand.transaction.amount_bar || 0) < 0 ? 'text-red-500' : 'text-green-500'">
+                                                    B: {{ (transaction.expand.transaction.amount_bar || 0).toFixed(2) }} €
+                                                </div>
                                                 <div class="text-xs text-muted-foreground">{{ transaction.expand.transaction.type }}</div>
                                             </div>
                                         </div>

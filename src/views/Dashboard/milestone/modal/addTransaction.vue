@@ -2,17 +2,17 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { onMounted, ref, type PropType } from 'vue';
+import { onMounted, ref, type PropType, computed } from 'vue';
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import type { MilestoneResponse, TransactionResponse } from '@/lib/pocketbase-types';
 import { TransactionTypeOptions } from '@/lib/pocketbase-types';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import pb from '@/lib/pb';
+import { formatCurrency } from '@/ts/format';
 
 const props = defineProps({
     milestone: {
@@ -33,10 +33,23 @@ const selectedTransactionIds = ref<string[]>([]);
 const mode = ref('existing');
 
 const title = ref('');
-const amount = ref(0);
+const amountKonto = ref<number | undefined>(undefined);
+const amountBar = ref<number | undefined>(undefined);
 const description = ref('');
-const isExpense = ref(false);
 const showAmountError = ref(false);
+
+// Calculate the net effect
+const netEffect = computed(() => {
+    return (amountKonto.value || 0) + (amountBar.value || 0);
+});
+
+// Determine transaction type based on net effect
+const transactionType = computed(() => {
+    if (netEffect.value >= 0) {
+        return TransactionTypeOptions.Eingehend;
+    }
+    return TransactionTypeOptions.Ausgehend;
+});
 
 const fetchAvailableTransactions = async () => {
     isLoading.value = true;
@@ -76,7 +89,8 @@ const addExistingTransactions = async () => {
 };
 
 const createNewTransaction = async () => {
-    if (amount.value <= 0) {
+    if ((amountKonto.value === undefined || amountKonto.value === 0) && 
+        (amountBar.value === undefined || amountBar.value === 0)) {
         showAmountError.value = true;
         return;
     }
@@ -85,9 +99,10 @@ const createNewTransaction = async () => {
     try {
         const newTransaction = await client.collection('transaction').create({
             title: title.value,
-            amount: isExpense.value ? -Math.abs(amount.value) : Math.abs(amount.value),
+            amount: amountKonto.value || 0,
+            amount_bar: amountBar.value || 0,
             message: description.value,
-            type: isExpense.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,
+            type: transactionType.value,
             milestone: props.milestone.id,
             ausschuss: props.committee.id,
             createdby: user.userId,
@@ -109,9 +124,9 @@ const createNewTransaction = async () => {
 
 const resetForm = () => {
     title.value = '';
-    amount.value = 0;
+    amountKonto.value = undefined;
+    amountBar.value = undefined;
     description.value = '';
-    isExpense.value = false;
     showAmountError.value = false;
 };
 
@@ -168,8 +183,13 @@ onMounted(() => {
                                     <div class="text-sm text-muted-foreground">{{ transaction.message }}</div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <div :class="transaction.type === TransactionTypeOptions.Eingehend ? 'text-green-500' : 'text-red-500'">
-                                        {{ transaction.amount }} €
+                                    <div class="text-right text-sm">
+                                        <div :class="(transaction.amount || 0) >= 0 ? 'text-green-500' : 'text-red-500'">
+                                            K: {{ transaction.amount }} €
+                                        </div>
+                                        <div :class="(transaction.amount_bar || 0) >= 0 ? 'text-green-500' : 'text-red-500'">
+                                            B: {{ transaction.amount_bar }} €
+                                        </div>
                                     </div>
                                     <div class="w-5 h-5 rounded-full border flex items-center justify-center" 
                                         :class="{ 'bg-primary border-primary': isSelected(transaction.id), 'border-muted-foreground': !isSelected(transaction.id) }">
@@ -195,19 +215,47 @@ onMounted(() => {
                 </TabsContent>
                 <TabsContent value="new">
                     <div class="grid gap-4 py-4">
-                        <div class="flex items-center gap-2">
-                            <Label for="isExpense">Ausgabe</Label>
-                            <Switch id="isExpense" v-model="isExpense" />
-                        </div>
                         <div class="grid gap-2">
                             <Label for="title">Titel</Label>
                             <Input id="title" placeholder="Titel der Transaktion" v-model="title" />
                         </div>
-                        <div class="grid gap-2">
-                            <Label for="amount">Betrag (€)</Label>
-                            <Input id="amount" type="number" placeholder="0.00" v-model="amount" :min="0" />
-                            <p v-if="showAmountError" class="text-red-500 text-sm">Der Betrag muss größer als 0 sein.</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="grid gap-2">
+                                <Label for="amountKonto">Konto (€)</Label>
+                                <Input id="amountKonto" type="number" placeholder="+100 oder -50" v-model.number="amountKonto" step="0.01" />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="amountBar">Bar (€)</Label>
+                                <Input id="amountBar" type="number" placeholder="+100 oder -50" v-model.number="amountBar" step="0.01" />
+                            </div>
                         </div>
+                        <p v-if="showAmountError" class="text-red-500 text-sm">Mindestens ein Betrag muss eingegeben werden.</p>
+                        
+                        <!-- Preview -->
+                        <div v-if="amountKonto || amountBar" class="p-3 rounded-md bg-muted">
+                            <div class="text-sm text-muted-foreground mb-1">Vorschau:</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div v-if="amountKonto" class="flex justify-between">
+                                    <span>Konto:</span>
+                                    <span :class="amountKonto >= 0 ? 'text-green-600' : 'text-red-600'">
+                                        {{ amountKonto >= 0 ? '+' : '' }}{{ formatCurrency(amountKonto) }}
+                                    </span>
+                                </div>
+                                <div v-if="amountBar" class="flex justify-between">
+                                    <span>Bar:</span>
+                                    <span :class="amountBar >= 0 ? 'text-green-600' : 'text-red-600'">
+                                        {{ amountBar >= 0 ? '+' : '' }}{{ formatCurrency(amountBar) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="border-t mt-2 pt-2 flex justify-between font-medium">
+                                <span>Netto:</span>
+                                <span :class="netEffect >= 0 ? 'text-green-600' : 'text-red-600'">
+                                    {{ netEffect >= 0 ? '+' : '' }}{{ formatCurrency(netEffect) }}
+                                </span>
+                            </div>
+                        </div>
+                        
                         <div class="grid gap-2">
                             <Label for="description">Beschreibung</Label>
                             <Textarea id="description" placeholder="Beschreibung..." v-model="description" />
@@ -218,7 +266,7 @@ onMounted(() => {
                             <Button variant="outline">Abbrechen</Button>
                         </DialogClose>
                         <DialogClose asChild>
-                            <Button @click="createNewTransaction" :disabled="!title || amount <= 0 || isLoading">
+                            <Button @click="createNewTransaction" :disabled="!title || ((amountKonto === undefined || amountKonto === 0) && (amountBar === undefined || amountBar === 0)) || isLoading">
                                 {{ isLoading ? 'Wird erstellt...' : 'Transaktion erstellen' }}
                             </Button>
                         </DialogClose>
