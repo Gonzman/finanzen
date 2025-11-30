@@ -10,8 +10,7 @@ import { useUser } from '@/components/usePocketbase';
 import Overview from './overview/overview.vue';
 import { onMounted, onUnmounted, watch } from 'vue';
 import pb from '@/lib/pb';
-import Workplanner from './workplanner/workplanner.vue';
-import Test from './workplanner/test.vue';
+import Workplanner from './workplanner/Workplanner.vue';
 const props = defineProps({
     committee: {
         type: Object as () => Team,
@@ -37,7 +36,7 @@ const loadCurrentTabFromStorage = (): string => {
         const savedTab = localStorage.getItem('currentTab');
         if (savedTab) {
             // Validate that the saved tab is one of the valid tabs
-            const validTabs = ['overview', 'transactions', 'milestones'];
+            const validTabs = ['overview', 'transactions', 'milestones', 'workplanner'];
             return validTabs.includes(savedTab) ? savedTab : 'overview';
         }
     } catch (error) {
@@ -93,7 +92,6 @@ onUnmounted(() => {
             <Transcactions :committee="props.committee" :key="props.committee.id" />
         </TabsContent>
         <TabsContent value="workplanner">
-            <Test></Test>
             <Workplanner :committee="props.committee" :key="props.committee.id" />
         </TabsContent>
     </Tabs>
