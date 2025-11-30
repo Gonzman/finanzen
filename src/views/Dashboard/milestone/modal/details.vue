@@ -37,7 +37,7 @@ const refreshTransactions = async () => {
 };
 
 const transactionObjects = computed((): TransactionAuthResponse<ExpandTransaction>[] => {
-    return transactions.value.filter((t): t is TransactionAuthResponse<ExpandTransaction> => 
+    return transactions.value.filter((t): t is TransactionAuthResponse<ExpandTransaction> =>
         t.expand?.transaction !== undefined);
 });
 
@@ -70,7 +70,7 @@ const totalAmount = computed((): { konto: number; bar: number } => {
                     {{ props.milestone.message }}
                 </DialogDescription>
             </DialogHeader>
-            
+
             <div class="py-4">
                 <!-- Milestone Stats -->
                 <div class="mb-4 p-4 bg-muted rounded-md">
@@ -96,27 +96,22 @@ const totalAmount = computed((): { konto: number; bar: number } => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mt-3">
                         <div class="text-sm text-muted-foreground mb-1">Status</div>
-                        <MilestoneTransactionStats 
-                            :milestoneId="props.milestone.id" 
-                            :transactions="transactionObjects.map(t => t.expand!.transaction)"
-                        />
+                        <MilestoneTransactionStats :milestoneId="props.milestone.id"
+                            :transactions="transactionObjects.map(t => t.expand!.transaction)" />
                     </div>
                 </div>
-                
+
                 <!-- Transactions Table -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="font-medium">Transaktionen</h3>
-                        <AddTransaction 
-                            :milestone="props.milestone" 
-                            :committee="props.committee"
-                            @transaction-added="refreshTransactions"
-                        />
+                        <AddTransaction :milestone="props.milestone" :committee="props.committee"
+                            @transaction-added="refreshTransactions" />
                     </div>
-                    
+
                     <div v-if="isLoading" class="py-4 text-center">
                         Lade Transaktionen...
                     </div>
@@ -128,35 +123,41 @@ const totalAmount = computed((): { konto: number; bar: number } => {
                             </div>
                             <ScrollArea class="h-[300px]">
                                 <div class="divide-y">
-                                    <div v-for="transaction in transactions" :key="transaction.id" 
-                                        class="p-3">
+                                    <div v-for="transaction in transactions" :key="transaction.id" class="p-3">
                                         <div class="grid grid-cols-[1fr_auto_auto] items-center mb-2">
                                             <div>
-                                                <div class="font-medium">{{ transaction.expand?.transaction?.title || 'Unbenannt' }}</div>
-                                                <div class="text-xs text-muted-foreground">{{ new Date(transaction.created).toLocaleString() }}</div>
+                                                <div class="font-medium">{{ transaction.expand?.transaction?.title ||
+                                                    'Unbenannt' }}</div>
+                                                <div class="text-xs text-muted-foreground">{{ new
+                                                    Date(transaction.created).toLocaleString() }}</div>
                                             </div>
                                             <div class="px-4 text-center">
                                                 <div class="flex items-center gap-1 justify-center">
-                                                    <TransactionStateIcon 
-                                                        :state="transaction.state || TransactionAuthStateOptions.Ausstehend" 
-                                                        :size="14"
-                                                    />
+                                                    <TransactionStateIcon
+                                                        :state="transaction.state || TransactionAuthStateOptions.Ausstehend"
+                                                        :size="14" />
                                                     <span class="text-sm">
-                                                        {{ transaction.state || TransactionAuthStateOptions.Ausstehend }}
+                                                        {{ transaction.state || TransactionAuthStateOptions.Ausstehend
+                                                        }}
                                                     </span>
                                                 </div>
                                             </div>
                                             <div v-if="transaction.expand?.transaction" class="text-right font-medium">
-                                                <div :class="(transaction.expand.transaction.amount || 0) < 0 ? 'text-red-500' : 'text-green-500'">
+                                                <div
+                                                    :class="(transaction.expand.transaction.amount || 0) < 0 ? 'text-red-500' : 'text-green-500'">
                                                     K: {{ (transaction.expand.transaction.amount || 0).toFixed(2) }} €
                                                 </div>
-                                                <div :class="(transaction.expand.transaction.amount_bar || 0) < 0 ? 'text-red-500' : 'text-green-500'">
-                                                    B: {{ (transaction.expand.transaction.amount_bar || 0).toFixed(2) }} €
+                                                <div
+                                                    :class="(transaction.expand.transaction.amount_bar || 0) < 0 ? 'text-red-500' : 'text-green-500'">
+                                                    B: {{ (transaction.expand.transaction.amount_bar || 0).toFixed(2) }}
+                                                    €
                                                 </div>
-                                                <div class="text-xs text-muted-foreground">{{ transaction.expand.transaction.type }}</div>
+                                                <div class="text-xs text-muted-foreground">{{
+                                                    transaction.expand.transaction.type }}</div>
                                             </div>
                                         </div>
-                                        <div v-if="transaction.expand?.transaction?.message" class="mt-1 p-2 bg-muted/50 rounded text-sm text-muted-foreground">
+                                        <div v-if="transaction.expand?.transaction?.message"
+                                            class="mt-1 p-2 bg-muted/50 rounded text-sm text-muted-foreground">
                                             {{ transaction.expand.transaction.message }}
                                         </div>
                                     </div>
@@ -169,7 +170,7 @@ const totalAmount = computed((): { konto: number; bar: number } => {
                     </div>
                 </div>
             </div>
-            
+
             <DialogFooter>
                 <DialogClose asChild>
                     <Button variant="outline">Schließen</Button>

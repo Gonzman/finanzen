@@ -58,7 +58,7 @@ const fetchAvailableTransactions = async () => {
             filter: `ausschuss = "${props.committee.id}" && (milestone = null || milestone = "")`,
             sort: '-created',
         }); //FIXME: no fetch
-        
+
         transactions.value = result;
         console.log('Available transactions:', result);
     } catch (error) {
@@ -71,7 +71,7 @@ const fetchAvailableTransactions = async () => {
 
 const addExistingTransactions = async () => {
     if (selectedTransactionIds.value.length === 0) return;
-    
+
     isLoading.value = true;
     try {
         for (const transactionId of selectedTransactionIds.value) {
@@ -89,12 +89,12 @@ const addExistingTransactions = async () => {
 };
 
 const createNewTransaction = async () => {
-    if ((amountKonto.value === undefined || amountKonto.value === 0) && 
+    if ((amountKonto.value === undefined || amountKonto.value === 0) &&
         (amountBar.value === undefined || amountBar.value === 0)) {
         showAmountError.value = true;
         return;
     }
-    
+
     isLoading.value = true;
     try {
         const newTransaction = await client.collection('transaction').create({
@@ -107,12 +107,12 @@ const createNewTransaction = async () => {
             ausschuss: props.committee.id,
             createdby: user.userId,
         });
-        
+
         await client.collection('transactionAuth').create({
             transaction: newTransaction.id,
             state: 'Ausstehend'
         });
-        
+
         console.log('New transaction created and added to milestone successfully');
         resetForm();
     } catch (error) {
@@ -162,7 +162,7 @@ onMounted(() => {
                     Füge eine bestehende Transaktion hinzu oder erstelle eine neue.
                 </DialogDescription>
             </DialogHeader>
-            
+
             <Tabs v-model="mode" class="w-full">
                 <TabsList class="grid w-full grid-cols-2">
                     <TabsTrigger value="existing">Bestehende Transaktionen</TabsTrigger>
@@ -174,7 +174,7 @@ onMounted(() => {
                     </div>
                     <ScrollArea v-else-if="transactions.length > 0" class="h-[300px] pr-4">
                         <div class="space-y-2 py-2">
-                            <div v-for="transaction in transactions" :key="transaction.id" 
+                            <div v-for="transaction in transactions" :key="transaction.id"
                                 class="flex items-center justify-between p-2 rounded hover:bg-muted cursor-pointer"
                                 :class="{ 'bg-muted': isSelected(transaction.id) }"
                                 @click="toggleSelection(transaction.id)">
@@ -184,16 +184,19 @@ onMounted(() => {
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <div class="text-right text-sm">
-                                        <div :class="(transaction.amount || 0) >= 0 ? 'text-green-500' : 'text-red-500'">
+                                        <div
+                                            :class="(transaction.amount || 0) >= 0 ? 'text-green-500' : 'text-red-500'">
                                             K: {{ transaction.amount }} €
                                         </div>
-                                        <div :class="(transaction.amount_bar || 0) >= 0 ? 'text-green-500' : 'text-red-500'">
+                                        <div
+                                            :class="(transaction.amount_bar || 0) >= 0 ? 'text-green-500' : 'text-red-500'">
                                             B: {{ transaction.amount_bar }} €
                                         </div>
                                     </div>
-                                    <div class="w-5 h-5 rounded-full border flex items-center justify-center" 
+                                    <div class="w-5 h-5 rounded-full border flex items-center justify-center"
                                         :class="{ 'bg-primary border-primary': isSelected(transaction.id), 'border-muted-foreground': !isSelected(transaction.id) }">
-                                        <div v-if="isSelected(transaction.id)" class="w-2 h-2 bg-white rounded-full"></div>
+                                        <div v-if="isSelected(transaction.id)" class="w-2 h-2 bg-white rounded-full">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -207,7 +210,8 @@ onMounted(() => {
                             <Button variant="outline">Abbrechen</Button>
                         </DialogClose>
                         <DialogClose asChild>
-                            <Button @click="addExistingTransactions" :disabled="selectedTransactionIds.length === 0 || isLoading">
+                            <Button @click="addExistingTransactions"
+                                :disabled="selectedTransactionIds.length === 0 || isLoading">
                                 {{ selectedTransactionIds.length }} Transaktion(en) hinzufügen
                             </Button>
                         </DialogClose>
@@ -222,15 +226,18 @@ onMounted(() => {
                         <div class="grid grid-cols-2 gap-4">
                             <div class="grid gap-2">
                                 <Label for="amountKonto">Konto (€)</Label>
-                                <Input id="amountKonto" type="number" placeholder="+100 oder -50" v-model.number="amountKonto" step="0.01" />
+                                <Input id="amountKonto" type="number" placeholder="+100 oder -50"
+                                    v-model.number="amountKonto" step="0.01" />
                             </div>
                             <div class="grid gap-2">
                                 <Label for="amountBar">Bar (€)</Label>
-                                <Input id="amountBar" type="number" placeholder="+100 oder -50" v-model.number="amountBar" step="0.01" />
+                                <Input id="amountBar" type="number" placeholder="+100 oder -50"
+                                    v-model.number="amountBar" step="0.01" />
                             </div>
                         </div>
-                        <p v-if="showAmountError" class="text-red-500 text-sm">Mindestens ein Betrag muss eingegeben werden.</p>
-                        
+                        <p v-if="showAmountError" class="text-red-500 text-sm">Mindestens ein Betrag muss eingegeben
+                            werden.</p>
+
                         <!-- Preview -->
                         <div v-if="amountKonto || amountBar" class="p-3 rounded-md bg-muted">
                             <div class="text-sm text-muted-foreground mb-1">Vorschau:</div>
@@ -255,7 +262,7 @@ onMounted(() => {
                                 </span>
                             </div>
                         </div>
-                        
+
                         <div class="grid gap-2">
                             <Label for="description">Beschreibung</Label>
                             <Textarea id="description" placeholder="Beschreibung..." v-model="description" />
@@ -266,7 +273,8 @@ onMounted(() => {
                             <Button variant="outline">Abbrechen</Button>
                         </DialogClose>
                         <DialogClose asChild>
-                            <Button @click="createNewTransaction" :disabled="!title || ((amountKonto === undefined || amountKonto === 0) && (amountBar === undefined || amountBar === 0)) || isLoading">
+                            <Button @click="createNewTransaction"
+                                :disabled="!title || ((amountKonto === undefined || amountKonto === 0) && (amountBar === undefined || amountBar === 0)) || isLoading">
                                 {{ isLoading ? 'Wird erstellt...' : 'Transaktion erstellen' }}
                             </Button>
                         </DialogClose>
