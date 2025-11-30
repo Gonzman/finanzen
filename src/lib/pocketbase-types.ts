@@ -15,6 +15,8 @@ export enum Collections {
     Budget = 'budget',
     Milestone = 'milestone',
     OverviewTransaction = 'overview_transaction',
+    Shift = 'shift',
+    Timetable = 'timetable',
     Transaction = 'transaction',
     TransactionAuth = 'transactionAuth',
     Users = 'users',
@@ -122,6 +124,27 @@ export type MilestoneRecord = {
     updated: IsoAutoDateString;
 };
 
+export type TimetableRecord = {
+    ausschuss: RecordIdString;
+    created: IsoAutoDateString;
+    createdby: RecordIdString;
+    id: string;
+    name: string;
+    updated: IsoAutoDateString;
+};
+
+export type ShiftRecord = {
+    created: IsoAutoDateString;
+    date: IsoDateString;
+    endTime: string;
+    id: string;
+    people: RecordIdString[];
+    purpose: string;
+    startTime: string;
+    timetable: RecordIdString;
+    updated: IsoAutoDateString;
+};
+
 export enum OverviewTransactionTypeOptions {
     'Ausgehend' = 'Ausgehend',
     'Eingehend' = 'Eingehend',
@@ -222,6 +245,10 @@ export type BudgetResponse<Tbudget = unknown, Texpand = unknown> = Required<
     BaseSystemFields<Texpand>;
 export type MilestoneResponse<Texpand = unknown> = Required<MilestoneRecord> &
     BaseSystemFields<Texpand>;
+export type TimetableResponse<Texpand = unknown> = Required<TimetableRecord> &
+    BaseSystemFields<Texpand>;
+export type ShiftResponse<Texpand = unknown> = Required<ShiftRecord> &
+    BaseSystemFields<Texpand>;
 export type OverviewTransactionResponse<Texpand = unknown> =
     Required<OverviewTransactionRecord> & BaseSystemFields<Texpand>;
 export type TransactionResponse<Texpand = unknown> =
@@ -243,6 +270,8 @@ export type CollectionRecords = {
     budget: BudgetRecord;
     milestone: MilestoneRecord;
     overview_transaction: OverviewTransactionRecord;
+    shift: ShiftRecord;
+    timetable: TimetableRecord;
     transaction: TransactionRecord;
     transactionAuth: TransactionAuthRecord;
     users: UsersRecord;
@@ -258,6 +287,8 @@ export type CollectionResponses = {
     budget: BudgetResponse;
     milestone: MilestoneResponse;
     overview_transaction: OverviewTransactionResponse;
+    shift: ShiftResponse;
+    timetable: TimetableResponse;
     transaction: TransactionResponse;
     transactionAuth: TransactionAuthResponse;
     users: UsersResponse;
