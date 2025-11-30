@@ -162,6 +162,7 @@ class pb {
             for (const item of authorizedResult) {
                 if (item.id == 'overall') {
                     budget += Number(item.budget) || 0;
+                    budget += Number(item.budget_bar) || 0;
                 }
             }
         } catch (error) {
@@ -170,6 +171,42 @@ class pb {
 
         console.log('Overall Budget:', budget);
         return budget;
+    }
+
+    async overAllBudgetByAccount(): Promise<{ konto: number; bar: number }> {
+        let konto = 0;
+        let bar = 0;
+        try {
+            const authorizedResult = await this.client
+                .collection('transactionAuth')
+                .getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                    sort: '-updated',
+                    expand: 'transaction',
+                    filter: `state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`,
+                });
+
+            for (const item of authorizedResult) {
+                konto += item.expand?.transaction.amount ?? 0;
+                bar += item.expand?.transaction.amount_bar ?? 0;
+            }
+
+            const inProgressResult = await this.client
+                .collection('transactionAuth')
+                .getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                    sort: '-updated',
+                    expand: 'transaction',
+                    filter: `state = "${TransactionAuthStateOptions['In Bearbeitung']}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`,
+                });
+
+            for (const item of inProgressResult) {
+                konto += item.expand?.transaction.amount ?? 0;
+                bar += item.expand?.transaction.amount_bar ?? 0;
+            }
+        } catch (error) {
+            console.error('Error fetching budget by account:', error);
+        }
+
+        return { konto, bar };
     }
 
     startSync() {

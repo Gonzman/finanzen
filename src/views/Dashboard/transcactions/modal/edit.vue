@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { computed, ref, type PropType } from 'vue';
 import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse } from '@/lib/pocketbase-types';
-import Switch from '@/components/ui/switch/Switch.vue';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
 import type { ExpandTransaction } from '@/lib/pb';
 import { isUserChairOfCommittee } from '@/lib/utils';
+import { formatCurrency } from '@/ts/format';
 
 const props = defineProps({
     id: {
@@ -19,14 +19,28 @@ const props = defineProps({
 });
 
 const title = ref(props.id.expand?.transaction.title || '');
-const amount = ref(Math.abs(props.id.expand?.transaction.amount) || 0);
+const amountKonto = ref<number | undefined>(props.id.expand?.transaction.amount || undefined);
+const amountBar = ref<number | undefined>(props.id.expand?.transaction.amount_bar || undefined);
 const description = ref(props.id.expand?.transaction.message || '');
-const ausgabe = ref(props.id.expand?.transaction.type === TransactionTypeOptions.Ausgehend); // Default value for the switch
 const showAmountError = ref(false);
 const images = ref<File[] | null>(null);
 
-function createTransaction() {
-    if (amount.value <= 0) {
+// Calculate the net effect (positive = gain, negative = loss)
+const netEffect = computed(() => {
+    return (amountKonto.value || 0) + (amountBar.value || 0);
+});
+
+// Determine transaction type based on net effect
+const transactionType = computed(() => {
+    if (netEffect.value >= 0) {
+        return TransactionTypeOptions.Eingehend;
+    }
+    return TransactionTypeOptions.Ausgehend;
+});
+
+function updateTransaction() {
+    if ((amountKonto.value === undefined || amountKonto.value === 0) &&
+        (amountBar.value === undefined || amountBar.value === 0)) {
         showAmountError.value = true;
         return;
     }
@@ -35,8 +49,9 @@ function createTransaction() {
     usePocketBase().collection('transaction').update(props.id.expand!.transaction.id, {
         title: title.value,
         message: description.value,
-        amount: ausgabe.value ? -Math.abs(amount.value) : Math.abs(amount.value),
-        type: ausgabe.value ? TransactionTypeOptions.Ausgehend : TransactionTypeOptions.Eingehend,
+        amount: amountKonto.value || 0,
+        amount_bar: amountBar.value || 0,
+        type: transactionType.value,
         recipe: images.value,
     }).then(() => {
         console.log('Transaction updated successfully');
@@ -47,15 +62,15 @@ function createTransaction() {
 
 const hasChanges = computed(() => {
     return title.value !== props.id.expand?.transaction.title ||
-        amount.value !== props.id.expand.transaction.amount ||
-        description.value !== props.id.expand?.transaction.message ||
-        ausgabe.value !== (props.id.expand?.transaction.type === TransactionTypeOptions.Ausgehend);
+        (amountKonto.value || 0) !== (props.id.expand?.transaction.amount || 0) ||
+        (amountBar.value || 0) !== (props.id.expand?.transaction.amount_bar || 0) ||
+        description.value !== props.id.expand?.transaction.message;
 });
 
 const isValid = computed(() => {
-    return amount.value > 0;
+    return (amountKonto.value !== undefined && amountKonto.value !== 0) ||
+        (amountBar.value !== undefined && amountBar.value !== 0);
 });
-
 
 function changeImage(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -63,7 +78,6 @@ function changeImage(event: Event) {
         images.value = Array.from(target.files);
     }
 }
-
 </script>
 
 <template>
@@ -78,24 +92,54 @@ function changeImage(event: Event) {
         </DialogTrigger>
         <DialogContent class="sm:max-w-[425px]">
             <DialogHeader>
-                <DialogTitle>Transaktion</DialogTitle>
+                <DialogTitle>Transaktion bearbeiten</DialogTitle>
                 <DialogDescription>
-                    Hier sind die Details zur Transaktion.
+                    Bearbeite die Transaktionsdetails.
                 </DialogDescription>
             </DialogHeader>
-            <div class="flex flex-col  items-center space-x-2">
-                <Label>Ist eine ausgabe?
-                    <Switch v-model="ausgabe" />
-                </Label>
 
-            </div>
             <Label>Titel</Label>
             <Input :placeholder="id.expand?.transaction.title || 'Titel'" v-model="title" />
 
-            <Label>Betrag</Label>
-            <Input :placeholder="id.expand?.transaction.amount || 'Betrag'" v-model="amount" type="number"
-                inputmode="numeric" min="0.01" step="0.01" @input="showAmountError = false" />
-            <div v-if="showAmountError" class="text-red-500 text-sm">Betrag muss größer als 0 sein</div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <Label>Konto (Bank)</Label>
+                    <Input placeholder="+100 oder -50" v-model.number="amountKonto" inputmode="decimal" type="number"
+                        step="0.01" @input="showAmountError = false" />
+                </div>
+                <div>
+                    <Label>Barkasse</Label>
+                    <Input placeholder="+100 oder -50" v-model.number="amountBar" inputmode="decimal" type="number"
+                        step="0.01" @input="showAmountError = false" />
+                </div>
+            </div>
+
+            <div v-if="showAmountError" class="text-red-500 text-sm">Mindestens ein Betrag muss eingegeben werden</div>
+
+            <!-- Show net effect preview -->
+            <div v-if="amountKonto || amountBar" class="p-3 rounded-md bg-muted">
+                <div class="text-sm text-muted-foreground mb-1">Vorschau:</div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div v-if="amountKonto" class="flex justify-between">
+                        <span>Konto:</span>
+                        <span :class="amountKonto >= 0 ? 'text-green-600' : 'text-red-600'">
+                            {{ amountKonto >= 0 ? '+' : '' }}{{ formatCurrency(amountKonto) }}
+                        </span>
+                    </div>
+                    <div v-if="amountBar" class="flex justify-between">
+                        <span>Bar:</span>
+                        <span :class="amountBar >= 0 ? 'text-green-600' : 'text-red-600'">
+                            {{ amountBar >= 0 ? '+' : '' }}{{ formatCurrency(amountBar) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="border-t mt-2 pt-2 flex justify-between font-medium">
+                    <span>Netto:</span>
+                    <span :class="netEffect >= 0 ? 'text-green-600' : 'text-red-600'">
+                        {{ netEffect >= 0 ? '+' : '' }}{{ formatCurrency(netEffect) }}
+                    </span>
+                </div>
+            </div>
 
             <Label>Beschreibung</Label>
             <Textarea :placeholder="id.expand?.transaction.message || 'Beschreibung'" v-model="description"></Textarea>
@@ -104,7 +148,7 @@ function changeImage(event: Event) {
             <Input type="file" multiple @change="changeImage" />
 
             <DialogClose as-child>
-                <Button @click="createTransaction" type="button" variant="default" :disabled="!hasChanges || !isValid">
+                <Button @click="updateTransaction" type="button" variant="default" :disabled="!hasChanges || !isValid">
                     {{ hasChanges ? 'Speichern' : 'Keine Änderungen' }}
                 </Button>
             </DialogClose>

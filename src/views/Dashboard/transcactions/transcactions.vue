@@ -55,7 +55,7 @@ function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: stri
     t.state.toLowerCase().includes(filter.toLowerCase()) ||
     (t.expand?.transaction.expand?.milestone?.title?.toLowerCase().includes(filter.toLowerCase()) ?? false) ||
     t.expand?.transaction.amount.toString().includes(filter.toLowerCase()) ||
-    //t.state.toLowerCase().includes(filter.value.toLowerCase()) ||
+    t.expand?.transaction.amount_bar.toString().includes(filter.toLowerCase()) ||
     t.expand?.transaction.expand?.createdby.name.toLowerCase().includes(filter.toLowerCase()) ||
     t.expand?.transaction.expand?.createdby.email.toLowerCase().includes(filter.toLowerCase());
 }
@@ -71,7 +71,8 @@ function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: stri
         <TableHead>Status</TableHead>
         <TableHead>Art</TableHead>
         <TableHead>Meilenstein</TableHead>
-        <TableHead class="text-right">Betrag</TableHead>
+        <TableHead class="text-right">Betrag (Konto)</TableHead>
+        <TableHead class="text-right">Betrag (Bar)</TableHead>
         <TableHead class="w-0 p-0"></TableHead>
       </TableRow>
     </TableHeader>
@@ -97,6 +98,14 @@ function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: stri
           <div class="flex items-center justify-end"
             :class="invoice.expand!.transaction.amount < 0 ? 'text-red-500' : 'text-green-500'">
             {{ formatTransaction(invoice.expand!.transaction.amount, invoice.expand!.transaction.type).formattedAmount
+            }}
+          </div>
+        </TableCell>
+        <TableCell class="text-right">
+          <div class="flex items-center justify-end"
+            :class="invoice.expand!.transaction.amount_bar < 0 ? 'text-red-500' : 'text-green-500'">
+            {{ formatTransaction(invoice.expand!.transaction.amount_bar,
+              invoice.expand!.transaction.type).formattedAmount
             }}
           </div>
         </TableCell>

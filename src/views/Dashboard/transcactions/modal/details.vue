@@ -32,6 +32,7 @@ const auth = ref(props.id.acceptedby.includes(useUser().userId));
 
 const transactionData = computed(() => {
     const amount = props.id.expand!.transaction.amount;
+    const amount_bar = props.id.expand!.transaction.amount_bar;
     const isIncoming =
         props.id.expand!.transaction.type === TransactionTypeOptions.Eingehend;
 
@@ -39,16 +40,23 @@ const transactionData = computed(() => {
     const textColor = isIncoming ? 'text-green-700' : 'text-red-700';
 
     const formattedAmount = formatCurrency(amount);
+    const formattedAmountBar = formatCurrency(amount_bar);
 
     const shortDisplay = isIncoming
         ? `+${formattedAmount}`
         : `-${formattedAmount}`;
 
+    const shortDisplayBar = isIncoming
+        ? `+${formattedAmountBar}`
+        : `-${formattedAmountBar}`;
+
     return {
         bgColor,
         textColor,
         formattedAmount,
+        formattedAmountBar,
         shortDisplay,
+        shortDisplayBar,
         isIncoming,
     };
 });
@@ -145,16 +153,14 @@ const truncateFilename = (filename: string, maxLength: number = 30) => {
                         <h3 class="font-medium">
                             {{ props.id.expand?.transaction.title }}
                         </h3>
-                        <p class="text-sm text-muted-foreground">
-                            {{ transactionData.formattedAmount }}
-                        </p>
-                        <span
-                            :class="`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                                transactionData.isIncoming
-                                    ? 'bg-green-50 text-green-700'
-                                    : 'bg-red-50 text-red-700'
-                            }`"
-                        >
+                        <div class="text-sm text-muted-foreground space-y-1">
+                            <p>Konto: {{ transactionData.formattedAmount }}</p>
+                            <p>Bar: {{ transactionData.formattedAmountBar }}</p>
+                        </div>
+                        <span :class="`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${transactionData.isIncoming
+                                ? 'bg-green-50 text-green-700'
+                                : 'bg-red-50 text-red-700'
+                            }`">
                             {{ props.id.expand?.transaction.type }}
                         </span>
                     </div>
@@ -162,9 +168,7 @@ const truncateFilename = (filename: string, maxLength: number = 30) => {
 
                 <div class="space-y-2">
                     <div class="flex justify-between">
-                        <span class="text-sm text-muted-foreground"
-                            >Erstellt am</span
-                        >
+                        <span class="text-sm text-muted-foreground">Erstellt am</span>
                         <span class="text-sm">{{
                             new Date(props.id.created).toLocaleDateString(
                                 'de-DE',
@@ -173,9 +177,7 @@ const truncateFilename = (filename: string, maxLength: number = 30) => {
                     </div>
 
                     <div class="flex justify-between">
-                        <span class="text-sm text-muted-foreground"
-                            >Erstellt von</span
-                        >
+                        <span class="text-sm text-muted-foreground">Erstellt von</span>
                         <span class="text-sm">
                             {{
                                 props.id.expand?.transaction.expand?.createdby
@@ -187,36 +189,22 @@ const truncateFilename = (filename: string, maxLength: number = 30) => {
                         </span>
                     </div>
 
-                    <div
-                        v-if="props.id.expand?.transaction.message"
-                        class="mt-2"
-                    >
-                        <span class="text-sm text-muted-foreground"
-                            >Nachricht:</span
-                        >
+                    <div v-if="props.id.expand?.transaction.message" class="mt-2">
+                        <span class="text-sm text-muted-foreground">Nachricht:</span>
                         <p class="text-sm mt-1 p-2 bg-muted rounded-md">
                             {{ props.id.expand?.transaction.message }}
                         </p>
                     </div>
 
-                    <div
-                        v-if="
-                            props.id.expand?.transaction.recipe &&
-                            props.id.expand?.transaction.recipe.length > 0
-                        "
-                    >
-                        <span class="text-sm text-muted-foreground"
-                            >Anhang:</span
-                        >
+                    <div v-if="
+                        props.id.expand?.transaction.recipe &&
+                        props.id.expand?.transaction.recipe.length > 0
+                    ">
+                        <span class="text-sm text-muted-foreground">Anhang:</span>
 
-                        <Button
-                            v-for="attachment in props.id.expand?.transaction
-                                .recipe"
-                            :key="attachment"
-                            @click="openAttachment(attachment)"
-                            class="mt-1 w-full justify-start"
-                            variant="outline"
-                        >
+                        <Button v-for="attachment in props.id.expand?.transaction
+                            .recipe" :key="attachment" @click="openAttachment(attachment)"
+                            class="mt-1 w-full justify-start" variant="outline">
                             {{
                                 truncateFilename(
                                     attachment.split('/').pop() || '',
@@ -226,10 +214,7 @@ const truncateFilename = (filename: string, maxLength: number = 30) => {
                     </div>
                 </div>
 
-                <div
-                    v-if="User.getInstance().isPruefer()"
-                    class="flex justify-between"
-                >
+                <div v-if="User.getInstance().isPruefer()" class="flex justify-between">
                     <div class="flex items-center space-x-2 pt-4">
                         <p>
                             Autorisieren?

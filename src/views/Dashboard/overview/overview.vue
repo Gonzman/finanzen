@@ -7,6 +7,18 @@
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ formatCurrency(overAllBudget) }}</div>
+        <div class="mt-2 space-y-1 text-sm text-muted-foreground">
+          <div class="flex justify-between">
+            <span>Konto:</span>
+            <span :class="budgetByAccount.konto < 0 ? 'text-red-500' : 'text-green-500'">{{
+              formatCurrency(budgetByAccount.konto) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Bar:</span>
+            <span :class="budgetByAccount.bar < 0 ? 'text-red-500' : 'text-green-500'">{{
+              formatCurrency(budgetByAccount.bar) }}</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
     <Card class="w-full">
@@ -28,7 +40,8 @@
         <TableHead>Status</TableHead>
         <TableHead>Art</TableHead>
         <TableHead>Meilenstein</TableHead>
-        <TableHead class="text-right">Betrag</TableHead>
+        <TableHead class="text-right">Betrag (Konto)</TableHead>
+        <TableHead class="text-right">Betrag (Bar)</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
@@ -58,6 +71,13 @@
             }}
           </div>
         </TableCell>
+        <TableCell class="text-right">
+          <div class="flex items-center justify-end"
+            :class="invoice.amount_bar < 0 ? 'text-red-500' : 'text-green-500'">
+            {{ formatTransaction(invoice.amount_bar, invoice.type).formattedAmount
+            }}
+          </div>
+        </TableCell>
       </TableRow>
     </TableBody>
   </Table>
@@ -65,7 +85,6 @@
 
 <script setup lang="ts">
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
-import AvatarImage from '@/components/ui/avatar/AvatarImage.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePocketBase } from '@/components/usePocketbase';
@@ -83,6 +102,7 @@ const props = defineProps({
 
 const budget = ref(0);
 const overAllBudget = ref(0);
+const budgetByAccount = ref({ konto: 0, bar: 0 });
 
 const fetchBudget = (committeeId: string) => {
   pb.getBudget(committeeId)
@@ -104,6 +124,16 @@ const fetchOverAllBudget = () => {
     });
 };
 
+const fetchBudgetByAccount = () => {
+  pb.overAllBudgetByAccount()
+    .then((res) => {
+      budgetByAccount.value = res;
+    })
+    .catch((err) => {
+      console.error('Error fetching budget by account:', err);
+    });
+};
+
 const transactions = ref<OverviewTransactionResponse<any>[]>([]);
 
 const fetchTransactions = () => {
@@ -119,6 +149,7 @@ const fetchTransactions = () => {
 onMounted(() => {
   fetchBudget(props.committee.id);
   fetchOverAllBudget();
+  fetchBudgetByAccount();
   fetchTransactions();
 });
 

@@ -109,6 +109,7 @@ export type AusschussRecord = {
 
 export type BudgetRecord<Tbudget = unknown> = {
     budget?: null | Tbudget;
+    budget_bar?: number;
     id: string;
 };
 
@@ -138,6 +139,7 @@ export type OverviewTransactionRecord = {
     accepted?: boolean;
     acceptedby?: RecordIdString[];
     amount: number;
+    amount_bar: number;
     auth_created: IsoAutoDateString;
     auth_id?: RecordIdString;
     auth_state?: OverviewTransactionAuthStateOptions;
@@ -159,6 +161,7 @@ export enum TransactionTypeOptions {
 }
 export type TransactionRecord = {
     amount: number;
+    amount_bar: number;
     ausschuss: RecordIdString;
     created: IsoAutoDateString;
     createdby: RecordIdString;
