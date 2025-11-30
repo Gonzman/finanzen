@@ -30,7 +30,7 @@
       </CardContent>
     </Card>
   </div>
-  <br></br>
+  <!--<br></br>
   <Table>
     <TableCaption>Liste aller Transaktionen</TableCaption>
     <TableHeader>
@@ -80,7 +80,7 @@
         </TableCell>
       </TableRow>
     </TableBody>
-  </Table>
+  </Table>-->
 </template>
 
 <script setup lang="ts">
