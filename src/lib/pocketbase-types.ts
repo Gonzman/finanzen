@@ -15,6 +15,7 @@ export enum Collections {
     Budget = 'budget',
     Milestone = 'milestone',
     OverviewTransaction = 'overview_transaction',
+    People = 'people',
     Shift = 'shift',
     Timetable = 'timetable',
     Transaction = 'transaction',
@@ -135,13 +136,22 @@ export type TimetableRecord = {
 
 export type ShiftRecord = {
     created: IsoAutoDateString;
+    createdby: RecordIdString;
     date: IsoDateString;
     endTime: string;
     id: string;
-    people: RecordIdString[];
+    people?: RecordIdString[];
     purpose: string;
     startTime: string;
     timetable: RecordIdString;
+    updated: IsoAutoDateString;
+};
+
+export type PeopleRecord = {
+    ausschuss: RecordIdString;
+    created: IsoAutoDateString;
+    id: string;
+    name: string;
     updated: IsoAutoDateString;
 };
 
@@ -249,6 +259,8 @@ export type TimetableResponse<Texpand = unknown> = Required<TimetableRecord> &
     BaseSystemFields<Texpand>;
 export type ShiftResponse<Texpand = unknown> = Required<ShiftRecord> &
     BaseSystemFields<Texpand>;
+export type PeopleResponse<Texpand = unknown> = Required<PeopleRecord> &
+    BaseSystemFields<Texpand>;
 export type OverviewTransactionResponse<Texpand = unknown> =
     Required<OverviewTransactionRecord> & BaseSystemFields<Texpand>;
 export type TransactionResponse<Texpand = unknown> =
@@ -270,6 +282,7 @@ export type CollectionRecords = {
     budget: BudgetRecord;
     milestone: MilestoneRecord;
     overview_transaction: OverviewTransactionRecord;
+    people: PeopleRecord;
     shift: ShiftRecord;
     timetable: TimetableRecord;
     transaction: TransactionRecord;
@@ -287,6 +300,7 @@ export type CollectionResponses = {
     budget: BudgetResponse;
     milestone: MilestoneResponse;
     overview_transaction: OverviewTransactionResponse;
+    people: PeopleResponse;
     shift: ShiftResponse;
     timetable: TimetableResponse;
     transaction: TransactionResponse;

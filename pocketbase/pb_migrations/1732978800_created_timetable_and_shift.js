@@ -42,6 +42,37 @@ migrate((app) => {
 
     app.save(timetable);
 
+    // Create people collection
+    const people = new Collection({
+        name: 'people',
+        type: 'base',
+        schema: [
+            {
+                name: 'name',
+                type: 'text',
+                required: true,
+            },
+            {
+                name: 'ausschuss',
+                type: 'relation',
+                required: true,
+                options: {
+                    collectionId: app.findCollectionByNameOrId('ausschuss').id,
+                    cascadeDelete: false,
+                    maxSelect: 1,
+                    displayFields: ['name'],
+                },
+            },
+        ],
+        listRule: '@request.auth.id != "" && ausschuss.users.id ?= @request.auth.id',
+        viewRule: '@request.auth.id != "" && ausschuss.users.id ?= @request.auth.id',
+        createRule: '@request.auth.id != "" && ausschuss.users.id ?= @request.auth.id',
+        updateRule: '@request.auth.id != "" && ausschuss.users.id ?= @request.auth.id',
+        deleteRule: '@request.auth.id != "" && ausschuss.users.id ?= @request.auth.id',
+    });
+
+    app.save(people);
+
     // Create shift collection
     const shift = new Collection({
         name: 'shift',
@@ -80,10 +111,24 @@ migrate((app) => {
             },
             {
                 name: 'people',
-                type: 'json',
+                type: 'relation',
                 required: false,
                 options: {
-                    maxSize: 2000000,
+                    collectionId: people.id,
+                    cascadeDelete: false,
+                    maxSelect: null,
+                    displayFields: ['name'],
+                },
+            },
+            {
+                name: 'createdby',
+                type: 'relation',
+                required: true,
+                options: {
+                    collectionId: app.findCollectionByNameOrId('users').id,
+                    cascadeDelete: false,
+                    maxSelect: 1,
+                    displayFields: ['name'],
                 },
             },
         ],
@@ -101,6 +146,11 @@ migrate((app) => {
     const shift = app.findCollectionByNameOrId('shift');
     if (shift) {
         app.delete(shift);
+    }
+
+    const people = app.findCollectionByNameOrId('people');
+    if (people) {
+        app.delete(people);
     }
 
     const timetable = app.findCollectionByNameOrId('timetable');
