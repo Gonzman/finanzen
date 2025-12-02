@@ -1,23 +1,23 @@
 <template>
     <div class="h-full flex flex-col gap-4 p-4">
-        <!-- Header with Add Timetable button -->
+        <!-- Header mit Dienstplan erstellen Button -->
         <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Work Planner</h2>
+            <h2 class="text-xl font-semibold">Dienstplaner</h2>
             <CreateTimetable @create="createTimetable" />
         </div>
 
-        <!-- Loading State -->
+        <!-- Ladezustand -->
         <div v-if="isLoading" class="flex-1 flex items-center justify-center">
             <div class="text-center text-gray-500">
-                <p class="text-lg">Loading timetables...</p>
+                <p class="text-lg">Dienstpläne werden geladen...</p>
             </div>
         </div>
 
-        <!-- Timetables List -->
+        <!-- Dienstplan-Liste -->
         <div v-else-if="timetables.length === 0" class="flex-1 flex items-center justify-center">
             <div class="text-center text-gray-500">
-                <p class="text-lg mb-2">No timetables yet</p>
-                <p class="text-sm">Click "New Timetable" to create your first schedule</p>
+                <p class="text-lg mb-2">Noch keine Dienstpläne vorhanden</p>
+                <p class="text-sm">Klicke auf "Neuer Dienstplan" um deinen ersten Plan zu erstellen</p>
             </div>
         </div>
 
@@ -28,11 +28,11 @@
                 <div class="flex items-center justify-between p-4 bg-gray-50 border-b">
                     <div>
                         <h3 class="font-semibold text-lg">{{ timetable.name }}</h3>
-                        <p class="text-sm text-gray-500">{{ timetable.shifts.length }} shift(s)</p>
+                        <p class="text-sm text-gray-500">{{ timetable.shifts.length }} Schicht(en)</p>
                     </div>
                     <div class="flex gap-2">
                         <Button variant="default" size="sm" @click="openAddShiftDialog(timetable)">
-                            + Add Shift
+                            + Schicht hinzufügen
                         </Button>
                         <DeleteTimetable :timetable-id="timetable.id" :timetable-name="timetable.name"
                             @delete="deleteTimetable" />
@@ -75,7 +75,7 @@
                                                 class="mt-1 flex flex-wrap gap-1">
                                                 <span v-for="(person, idx) in positioned.shift.people.slice(0, 3)"
                                                     :key="idx" class="bg-white/20 px-1 rounded text-[10px]">
-                                                    {{ person }}
+                                                    {{ getPersonName(person) }}
                                                 </span>
                                                 <span v-if="positioned.shift.people.length > 3"
                                                     class="bg-white/20 px-1 rounded text-[10px]">
@@ -90,14 +90,14 @@
                     </table>
                 </div>
                 <div v-else class="p-8 text-center text-gray-500">
-                    <p>No shifts added yet. Click "Add Shift" to create one.</p>
+                    <p>Noch keine Schichten vorhanden. Klicke auf "Schicht hinzufügen" um eine zu erstellen.</p>
                 </div>
             </div>
         </div>
 
         <!-- Shift Dialog -->
-        <ShiftDialog v-model:open="showShiftDialog" :shift="editingShift" :committee-id="props.committee.id" @save="handleSaveShift"
-            @update="handleUpdateShift" @delete="handleDeleteShift" />
+        <ShiftDialog v-model:open="showShiftDialog" :shift="editingShift" :committee-id="props.committee.id"
+            @save="handleSaveShift" @update="handleUpdateShift" @delete="handleDeleteShift" />
     </div>
 </template>
 
@@ -106,7 +106,7 @@ import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import { Button } from '@/components/ui/button';
 import { ref, onMounted, watch } from 'vue';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
-import type { TimetableResponse, ShiftResponse } from '@/lib/pocketbase-types';
+import type { TimetableResponse, ShiftResponse, PeopleResponse } from '@/lib/pocketbase-types';
 import CreateTimetable from './modal/CreateTimetable.vue';
 import DeleteTimetable from './modal/DeleteTimetable.vue';
 import ShiftDialog, { type Shift } from './modal/ShiftDialog.vue';
@@ -132,6 +132,24 @@ const isLoading = ref(false);
 const showShiftDialog = ref(false);
 const currentTimetable = ref<Timetable | null>(null);
 const editingShift = ref<Shift | null>(null);
+const peopleMap = ref<Map<string, string>>(new Map());
+
+// Fetch all people and create a lookup map
+async function fetchPeople() {
+    try {
+        const records = await client.collection('people').getFullList<PeopleResponse>({
+            sort: 'name',
+        });
+        peopleMap.value = new Map(records.map(p => [p.id, p.name]));
+    } catch (error) {
+        console.error('Error fetching people:', error);
+    }
+}
+
+// Get person name by ID
+function getPersonName(personId: string): string {
+    return peopleMap.value.get(personId) || personId;
+}
 
 // Fetch timetables and shifts from PocketBase
 async function fetchTimetables() {
@@ -180,6 +198,7 @@ watch(() => props.committee.id, () => {
 });
 
 onMounted(() => {
+    fetchPeople();
     fetchTimetables();
 });
 
@@ -190,7 +209,7 @@ function getUniqueDates(timetable: Timetable): string[] {
 }
 
 function getDayName(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });
+    return new Date(dateStr).toLocaleDateString('de-DE', { weekday: 'short' });
 }
 
 function getDayNumber(dateStr: string): number {
@@ -198,7 +217,7 @@ function getDayNumber(dateStr: string): number {
 }
 
 function getMonthYear(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
 }
 
 function isToday(dateStr: string): boolean {

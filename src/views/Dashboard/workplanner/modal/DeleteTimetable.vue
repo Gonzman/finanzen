@@ -38,21 +38,21 @@ function handleDelete() {
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger asChild>
-            <Button variant="destructive" size="sm">Delete</Button>
+            <Button variant="destructive" size="sm">Löschen</Button>
         </DialogTrigger>
         <DialogContent class="sm:max-w-[400px]">
             <DialogHeader>
-                <DialogTitle>Delete Timetable</DialogTitle>
+                <DialogTitle>Dienstplan löschen</DialogTitle>
                 <DialogDescription>
-                    Are you sure you want to delete "{{ timetableName }}"? This action cannot be
-                    undone and all shifts will be removed.
+                    Bist du sicher, dass du "{{ timetableName }}" löschen möchtest? Diese Aktion kann nicht
+                    rückgängig gemacht werden und alle Schichten werden entfernt.
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>
                 <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
+                    <Button variant="outline">Abbrechen</Button>
                 </DialogClose>
-                <Button variant="destructive" @click="handleDelete">Delete</Button>
+                <Button variant="destructive" @click="handleDelete">Löschen</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

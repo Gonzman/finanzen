@@ -37,28 +37,28 @@ function handleKeyEnter() {
     <Dialog v-model:open="open">
         <DialogTrigger asChild>
             <Button class="flex items-center gap-2">
-                <span class="text-lg">+</span> New Timetable
+                <span class="text-lg">+</span> Neuer Dienstplan
             </Button>
         </DialogTrigger>
         <DialogContent class="sm:max-w-[400px]">
             <DialogHeader>
-                <DialogTitle>Create New Timetable</DialogTitle>
+                <DialogTitle>Neuen Dienstplan erstellen</DialogTitle>
                 <DialogDescription>
-                    Create a new timetable to organize your shifts.
+                    Erstelle einen neuen Dienstplan, um deine Schichten zu organisieren.
                 </DialogDescription>
             </DialogHeader>
             <div class="grid gap-4 py-4">
                 <div class="grid gap-2">
-                    <Label for="timetable-name">Timetable Name</Label>
-                    <Input id="timetable-name" v-model="name" placeholder="e.g., Weekend Event"
+                    <Label for="timetable-name">Name des Dienstplans</Label>
+                    <Input id="timetable-name" v-model="name" placeholder="z.B. Wochenend-Veranstaltung"
                         @keyup.enter="handleKeyEnter" />
                 </div>
             </div>
             <DialogFooter>
                 <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
+                    <Button variant="outline">Abbrechen</Button>
                 </DialogClose>
-                <Button @click="handleCreate" :disabled="!name.trim()">Create</Button>
+                <Button @click="handleCreate" :disabled="!name.trim()">Erstellen</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
