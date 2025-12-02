@@ -106,7 +106,7 @@ function getPersonName(personId: string): string {
 // Fetch person name and cache it
 async function fetchPersonName(personId: string) {
     if (peopleNames.value[personId]) return;
-    
+
     const person = peopleList.value.find(p => p.id === personId);
     if (person) {
         peopleNames.value[personId] = person.name;
