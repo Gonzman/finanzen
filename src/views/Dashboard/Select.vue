@@ -10,6 +10,7 @@ import { useUser } from '@/components/usePocketbase';
 import Overview from './overview/overview.vue';
 import { onMounted, onUnmounted, watch } from 'vue';
 import pb from '@/lib/pb';
+import Workplanner from './workplanner/Workplanner.vue';
 const props = defineProps({
     committee: {
         type: Object as () => Team,
@@ -35,7 +36,7 @@ const loadCurrentTabFromStorage = (): string => {
         const savedTab = localStorage.getItem('currentTab');
         if (savedTab) {
             // Validate that the saved tab is one of the valid tabs
-            const validTabs = ['overview', 'transactions', 'milestones'];
+            const validTabs = ['overview', 'transactions', 'milestones', 'workplanner'];
             return validTabs.includes(savedTab) ? savedTab : 'overview';
         }
     } catch (error) {
@@ -75,7 +76,9 @@ onUnmounted(() => {
         <TabsList>
             <TabsTrigger value="overview"> Überblick </TabsTrigger>
             <TabsTrigger value="transactions"> Transaktionen </TabsTrigger>
+            <TabsTrigger value="workplanner"> Arbeitsplaner </TabsTrigger>
             <TabsTrigger value="milestones"> Meilensteine </TabsTrigger>
+
             <Separator orientation="vertical" class="m-2" v-if="props.committee.chair == user.userId" />
             <Creator v-if="props.committee.users?.includes(user.userId)" :committee="props.committee" />
         </TabsList>
@@ -87,6 +90,9 @@ onUnmounted(() => {
         </TabsContent>
         <TabsContent value="transactions">
             <Transcactions :committee="props.committee" :key="props.committee.id" />
+        </TabsContent>
+        <TabsContent value="workplanner">
+            <Workplanner :committee="props.committee" :key="props.committee.id" />
         </TabsContent>
     </Tabs>
 </template>
