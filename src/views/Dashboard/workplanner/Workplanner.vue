@@ -96,7 +96,7 @@
         </div>
 
         <!-- Shift Dialog -->
-        <ShiftDialog v-model:open="showShiftDialog" :shift="editingShift" @save="handleSaveShift"
+        <ShiftDialog v-model:open="showShiftDialog" :shift="editingShift" :committee-id="props.committee.id" @save="handleSaveShift"
             @update="handleUpdateShift" @delete="handleDeleteShift" />
     </div>
 </template>
