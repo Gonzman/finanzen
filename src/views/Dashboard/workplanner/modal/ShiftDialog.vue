@@ -29,6 +29,7 @@ import { usePocketBase } from '@/components/usePocketbase';
 import type { PeopleResponse } from '@/lib/pocketbase-types';
 import { Check, ChevronsUpDown } from 'lucide-vue-next';
 import { cn } from '@/lib/utils';
+import pb from '@/lib/pb';
 
 export interface Shift {
     id: string;
@@ -76,6 +77,7 @@ const peopleList = ref<PeopleResponse[]>([]);
 const isLoadingPeople = ref(false);
 const peoplePopoverOpen = ref(false);
 const searchQuery = ref('');
+const peopleNames = ref<Record<string, string>>({});
 
 // Fetch people from PocketBase
 async function fetchPeople() {
@@ -85,6 +87,10 @@ async function fetchPeople() {
             sort: 'name',
         });
         peopleList.value = records;
+        // Cache all names for quick lookup
+        records.forEach(p => {
+            peopleNames.value[p.id] = p.name;
+        });
     } catch (error) {
         console.error('Error fetching people:', error);
     } finally {
@@ -92,10 +98,27 @@ async function fetchPeople() {
     }
 }
 
-// Get person name by ID
+// Get person name by ID (sync version for template)
 function getPersonName(personId: string): string {
+    return peopleNames.value[personId] || 'Laden...';
+}
+
+// Fetch person name and cache it
+async function fetchPersonName(personId: string) {
+    if (peopleNames.value[personId]) return;
+
     const person = peopleList.value.find(p => p.id === personId);
-    return person?.name || personId;
+    if (person) {
+        peopleNames.value[personId] = person.name;
+    } else {
+        try {
+            const person = await usePocketBase().collection('people').getOne<PeopleResponse>(personId);
+            peopleNames.value[personId] = person.name;
+        } catch (error) {
+            console.error('Error fetching person:', error);
+            peopleNames.value[personId] = 'Unbekannt';
+        }
+    }
 }
 
 // Toggle person selection
@@ -103,6 +126,13 @@ function togglePerson(personId: string) {
     const index = form.people.indexOf(personId);
     if (index === -1) {
         form.people.push(personId);
+        // Immediately cache name from peopleList if available
+        const person = peopleList.value.find(p => p.id === personId);
+        if (person) {
+            peopleNames.value[personId] = person.name;
+        } else {
+            fetchPersonName(personId);
+        }
     } else {
         form.people.splice(index, 1);
     }
@@ -131,6 +161,7 @@ async function createAndAddPerson() {
     if (existingPerson) {
         if (!form.people.includes(existingPerson.id)) {
             form.people.push(existingPerson.id);
+            peopleNames.value[existingPerson.id] = existingPerson.name;
         }
         searchQuery.value = '';
         return;
@@ -148,6 +179,8 @@ async function createAndAddPerson() {
         peopleList.value.push(newPerson as PeopleResponse);
         // Select the new person
         form.people.push(newPerson.id);
+        // Cache the name
+        peopleNames.value[newPerson.id] = name;
         // Clear search but keep popover open so user can continue adding
         searchQuery.value = '';
     } catch (error) {
@@ -183,6 +216,8 @@ watch(
                 form.startTime = props.shift.startTime;
                 form.endTime = props.shift.endTime;
                 form.people = [...props.shift.people];
+                // Fetch names for existing people
+                props.shift.people.forEach(fetchPersonName);
             } else {
                 // Adding new shift
                 isEditing.value = false;
@@ -297,14 +332,6 @@ function handleDelete() {
                                                 isPersonSelected(person.id) ? 'opacity-100' : 'opacity-0'
                                             )" />
                                             {{ person.name }}
-                                        </CommandItem>
-                                    </CommandGroup>
-                                    <!-- Neue Person hinzufügen - außerhalb CommandGroup um Filterung zu vermeiden -->
-                                    <CommandGroup v-if="searchQuery.trim() && !hasExactMatch()" heading="">
-                                        <CommandItem :value="searchQuery.trim()" @select.prevent="createAndAddPerson"
-                                            class="text-blue-600 cursor-pointer">
-                                            <span class="mr-2">+</span>
-                                            "{{ searchQuery.trim() }}" hinzufügen
                                         </CommandItem>
                                     </CommandGroup>
                                 </CommandList>
