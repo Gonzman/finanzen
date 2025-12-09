@@ -54,6 +54,36 @@ const totalAmount = computed((): { konto: number; bar: number } => {
     );
 });
 
+// Calculate sum of incoming (positive) values
+const incomingAmount = computed((): { konto: number; bar: number } => {
+    return transactions.value.reduce(
+        (total: { konto: number; bar: number }, transaction: TransactionAuthResponse<ExpandTransaction>) => {
+            const amount = transaction.expand?.transaction?.amount || 0;
+            const amountBar = transaction.expand?.transaction?.amount_bar || 0;
+            return {
+                konto: total.konto + (amount > 0 ? amount : 0),
+                bar: total.bar + (amountBar > 0 ? amountBar : 0)
+            };
+        },
+        { konto: 0, bar: 0 }
+    );
+});
+
+// Calculate sum of outgoing (negative) values
+const outgoingAmount = computed((): { konto: number; bar: number } => {
+    return transactions.value.reduce(
+        (total: { konto: number; bar: number }, transaction: TransactionAuthResponse<ExpandTransaction>) => {
+            const amount = transaction.expand?.transaction?.amount || 0;
+            const amountBar = transaction.expand?.transaction?.amount_bar || 0;
+            return {
+                konto: total.konto + (amount < 0 ? amount : 0),
+                bar: total.bar + (amountBar < 0 ? amountBar : 0)
+            };
+        },
+        { konto: 0, bar: 0 }
+    );
+});
+
 </script>
 
 <template>
@@ -95,8 +125,19 @@ const totalAmount = computed((): { konto: number; bar: number } => {
                                 {{ totalAmount.bar.toFixed(2) }} €
                             </div>
                         </div>
+                        <div>
+                            <div class="text-sm text-muted-foreground">Einnahmen</div>
+                            <div class="font-medium text-green-500">
+                                {{ (incomingAmount.konto + incomingAmount.bar).toFixed(2) }} €
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-muted-foreground">Ausgaben</div>
+                            <div class="font-medium text-red-500">
+                                {{ (outgoingAmount.konto + outgoingAmount.bar).toFixed(2) }} €
+                            </div>
+                        </div>
                     </div>
-
                     <div class="mt-3">
                         <div class="text-sm text-muted-foreground mb-1">Status</div>
                         <MilestoneTransactionStats :milestoneId="props.milestone.id"

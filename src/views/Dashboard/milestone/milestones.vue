@@ -123,6 +123,7 @@ const filteredMilestones = computed(() => {
                 <TableHead class="text-right">Genehmigt (Bar)</TableHead>
                 <TableHead class="text-right">Summe (Konto)</TableHead>
                 <TableHead class="text-right">Summe (Bar)</TableHead>
+                <TableHead class="w-0 p-0"> Summe</TableHead>
                 <TableHead class="w-0 p-0"></TableHead>
             </TableRow>
         </TableHeader>
@@ -154,6 +155,11 @@ const filteredMilestones = computed(() => {
                     :class="getTotalAmount(milestone.id).bar < 0 ? 'text-red-500' : 'text-green-500'">
                     {{ getTotalAmount(milestone.id).bar.toFixed(2) }} €
                 </TableCell>
+                <TableCell class="w-0 p-0"
+                    :class="(getApprovedAmount(milestone.id).konto + getApprovedAmount(milestone.id).bar) < 0 ? 'text-red-500' : 'text-green-500'">
+                    {{ (getApprovedAmount(milestone.id).konto + getApprovedAmount(milestone.id).bar).toFixed(2) }} €
+                </TableCell>
+
                 <TableCell class="text-right w-0 p-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
