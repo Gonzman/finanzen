@@ -84,11 +84,11 @@ type Data = { date: Date; bank: number; kasse: number; insgesamt: number }
 const chartConfig = {
     kasse: {
         label: "Kasse",
-        color: "var(--chart-2)",
+        color: "var(--chart-1)",
     },
     bank: {
         label: "Bank",
-        color: "var(--chart-1)",
+        color: "var(--chart-2)",
     },
     insgesamt: {
         label: "Insgesamt",
@@ -137,9 +137,13 @@ const svgDefs = `
 
 const timeRange = ref("90d")
 const filterRange = computed(() => {
+    if (timeRange.value === "all") {
+        return chartData.value
+    }
+
     return chartData.value.filter((item) => {
         const date = new Date(item.date)
-        const referenceDate = new Date("2024-06-30")
+        const referenceDate = new Date()
         let daysToSubtract = 90
         if (timeRange.value === "30d") {
             daysToSubtract = 30
@@ -174,24 +178,27 @@ onMounted(() => {
     <Card class="pt-0">
         <CardHeader class="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
             <div class="grid flex-1 gap-1">
-                <CardTitle>Area Chart - Interactive</CardTitle>
+                <CardTitle>Finanzverlauf</CardTitle>
                 <CardDescription>
-                    Showing total visitors for the last 3 months
+                    Entwicklung der Kontostände über die Zeit
                 </CardDescription>
             </div>
             <Select v-model="timeRange">
-                <SelectTrigger class="hidden w-[160px] rounded-lg sm:ml-auto sm:flex" aria-label="Select a value">
-                    <SelectValue placeholder="Last 3 months" />
+                <SelectTrigger class="hidden w-[160px] rounded-lg sm:ml-auto sm:flex" aria-label="Zeitraum auswählen">
+                    <SelectValue placeholder="Letzte 3 Monate" />
                 </SelectTrigger>
                 <SelectContent class="rounded-xl">
+                    <SelectItem value="all" class="rounded-lg">
+                        Alle Daten
+                    </SelectItem>
                     <SelectItem value="90d" class="rounded-lg">
-                        Last 3 months
+                        Letzte 3 Monate
                     </SelectItem>
                     <SelectItem value="30d" class="rounded-lg">
-                        Last 30 days
+                        Letzte 30 Tage
                     </SelectItem>
                     <SelectItem value="7d" class="rounded-lg">
-                        Last 7 days
+                        Letzte 7 Tage
                     </SelectItem>
                 </SelectContent>
             </Select>
@@ -199,29 +206,38 @@ onMounted(() => {
         <CardContent class="px-2 pt-4 sm:px-6 sm:pt-6 pb-4">
             <ChartContainer :config="chartConfig" class="aspect-auto h-[250px] w-full" :cursor="false">
                 <VisXYContainer :data="filterRange" :svg-defs="svgDefs" :margin="{ left: -40 }" :y-domain="yDomain">
-                    <VisArea :x="(d: Data) => d.date" :y="[(d: Data) => d.kasse, (d: Data) => d.bank]"
-                        :color="(d: Data, i: number) => ['url(#fillKasse)', 'url(#fillBank)'][i]" :opacity="0.6" />
-                    <VisLine :x="(d: Data) => d.date" :y="[(d: Data) => d.kasse, (d: Data) => d.kasse + d.bank]"
-                        :color="(d: Data, i: number) => [chartConfig.kasse.color, chartConfig.bank.color][i]"
-                        :line-width="1" />
+                    <VisArea :x="(d: Data) => d.date" :y="(d: Data) => d.kasse" :color="'url(#fillKasse)'"
+                        :opacity="0.6" />
+                    <VisArea :x="(d: Data) => d.date" :y="(d: Data) => d.bank" :color="'url(#fillBank)'"
+                        :opacity="0.6" />
+                    <VisLine :x="(d: Data) => d.date" :y="(d: Data) => d.insgesamt" :color="chartConfig.insgesamt.color"
+                        :line-width="2" />
                     <VisAxis type="x" :x="(d: Data) => d.date" :tick-line="false" :domain-line="false"
                         :grid-line="false" :num-ticks="6" :tick-format="(d: number, index: number) => {
                             const date = new Date(d)
-                            return date.toLocaleDateString('en-US', {
+                            return date.toLocaleDateString('de-DE', {
                                 month: 'short',
                                 day: 'numeric',
                             })
                         }" />
-                    <VisAxis type="y" :num-ticks="3" :tick-line="false" :domain-line="false" />
+                    <VisAxis type="y" :num-ticks="3" :tick-line="false" :domain-line="false" :tick-format="(value: number) => {
+                        return new Intl.NumberFormat('de-DE', {
+                            style: 'currency',
+                            currency: 'EUR',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                        }).format(value)
+                    }" />
                     <ChartTooltip />
                     <ChartCrosshair :template="componentToString(chartConfig, ChartTooltipContent, {
                         labelFormatter: (d) => {
-                            return new Date(d).toLocaleDateString('en-US', {
+                            return new Date(d).toLocaleDateString('de-DE', {
                                 month: 'short',
                                 day: 'numeric',
                             })
                         },
-                    })" :color="(d: Data, i: number) => [chartConfig.kasse.color, chartConfig.bank.color][i % 2]" />
+                    })"
+                        :color="(d: Data, i: number) => [chartConfig.kasse.color, chartConfig.bank.color, chartConfig.insgesamt.color][i]" />
                 </VisXYContainer>
 
                 <ChartLegendContent />
