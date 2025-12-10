@@ -133,6 +133,7 @@ class pb {
 
             for (const item of authorizedResult) {
                 budget += item.expand?.transaction.amount ?? 0;
+                budget += item.expand?.transaction.amount_bar ?? 0;
             }
 
             const inProgressResult = await this.client
@@ -145,6 +146,7 @@ class pb {
 
             for (const item of inProgressResult) {
                 budget += item.expand?.transaction.amount ?? 0;
+                budget += item.expand?.transaction.amount_bar ?? 0;
             }
         } catch (error) {
             console.error('Error fetching budget:', error);
