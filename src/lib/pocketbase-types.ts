@@ -173,7 +173,7 @@ export type OverviewTransactionRecord = {
     acceptedby?: RecordIdString[];
     amount: number;
     amount_bar: number;
-    auth_created: IsoAutoDateString;
+    created: IsoAutoDateString;
     auth_id?: RecordIdString;
     auth_state?: OverviewTransactionAuthStateOptions;
     auth_updated: IsoAutoDateString;

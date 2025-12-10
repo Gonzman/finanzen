@@ -30,6 +30,8 @@
       </CardContent>
     </Card>
   </div>
+
+  <Chart />
   <!--<br></br>
   <Table>
     <TableCaption>Liste aller Transaktionen</TableCaption>
@@ -92,6 +94,9 @@ import pb from '@/lib/pb';
 import { OverviewTransactionTypeOptions, type OverviewTransactionResponse } from '@/lib/pocketbase-types';
 import { formatCurrency, formatTransaction } from '@/ts/format';
 import { onMounted, ref } from 'vue';
+import type chart from './chart.vue';
+import Chart from './chart.vue';
+import Test from './test.vue';
 
 const props = defineProps({
   committee: {
@@ -134,23 +139,12 @@ const fetchBudgetByAccount = () => {
     });
 };
 
-const transactions = ref<OverviewTransactionResponse<any>[]>([]);
 
-const fetchTransactions = () => {
-  usePocketBase().collection('overview_transaction').getFullList()
-    .then((res) => {
-      transactions.value = res;
-    })
-    .catch((err) => {
-      console.error('Error fetching transactions:', err);
-    });
-};
 
 onMounted(() => {
   fetchBudget(props.committee.id);
   fetchOverAllBudget();
   fetchBudgetByAccount();
-  fetchTransactions();
 });
 
 </script>
