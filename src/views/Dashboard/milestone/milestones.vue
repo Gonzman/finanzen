@@ -116,7 +116,7 @@ const filteredMilestones = computed(() => {
         <TableHeader>
             <TableRow>
                 <TableHead class="w-[200px]">Title</TableHead>
-                <TableHead>Beschreibung</TableHead>
+                <TableHead class="max-w-[300px]">Beschreibung</TableHead>
                 <TableHead>Anzahl Transaktionen</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead class="text-right">Genehmigt (Konto)</TableHead>
@@ -132,7 +132,7 @@ const filteredMilestones = computed(() => {
                 <TableCell class="font-medium">
                     {{ milestone.title }}
                 </TableCell>
-                <TableCell>{{ milestone.message || '-' }}</TableCell>
+                <TableCell class="max-w-[300px] truncate">{{ milestone.message || '-' }}</TableCell>
                 <TableCell>{{ getTransactionCount(milestone.id) }}</TableCell>
                 <TableCell>
                     <MilestoneTransactionStats :milestoneId="milestone.id"
