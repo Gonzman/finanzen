@@ -1,11 +1,11 @@
 import { ref } from 'vue';
 import {
-    Collections,
     TransactionAuthStateOptions,
     TransactionTypeOptions,
     type AusschussResponse,
-    type CollectionRecords,
     type MilestoneResponse,
+    type PeopleResponse,
+    type ShiftResponse,
     type TransactionAuthResponse,
     type TransactionResponse,
     type UsersResponse,
@@ -29,10 +29,7 @@ class pb {
     }
 
     private getCurrentAusschuss(): string | null {
-        if (
-            this.transaction.value.length > 0 &&
-            this.transaction.value[0].expand?.transaction?.ausschuss
-        ) {
+        if (this.transaction.value.length > 0 && this.transaction.value[0].expand?.transaction?.ausschuss) {
             return this.transaction.value[0].expand.transaction.ausschuss;
         }
         return null;
@@ -50,7 +47,7 @@ class pb {
                     expand: 'transaction, transaction.createdby',
                     sort: '-updated',
                 })
-                .then(result => {
+                .then((result) => {
                     this.transaction.value = result;
                     return this.transaction;
                 });
@@ -69,7 +66,7 @@ class pb {
                     expand: 'transaction',
                     sort: '-updated',
                 })
-                .then(result => {
+                .then((result) => {
                     this.milestone.value = result;
                     return this.milestone;
                 });
@@ -84,7 +81,7 @@ class pb {
                 sort: '-updated',
                 filter: `transaction.ausschuss = "${ausschuss}"`,
             })
-            .then(result => {
+            .then((result) => {
                 this.transaction.value = result;
             });
         return this.transaction;
@@ -98,7 +95,7 @@ class pb {
                 sort: '-updated',
                 filter: `transaction.milestone = "${milestoneId}"`,
             })
-            .then(result => {
+            .then((result) => {
                 this.transaction.value = result;
             });
         return this.transaction;
@@ -112,7 +109,7 @@ class pb {
                 sort: '-updated',
                 filter: `ausschuss = "${ausschuss}"`,
             })
-            .then(result => {
+            .then((result) => {
                 this.milestone.value = result;
             });
         return this.milestone;
@@ -123,26 +120,22 @@ class pb {
     async getBudget(ausschuss: string): Promise<number> {
         let budget = 0;
         try {
-            const authorizedResult = await this.client
-                .collection('transactionAuth')
-                .getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                    sort: '-updated',
-                    expand: 'transaction, transaction.createdby',
-                    filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`,
-                });
+            const authorizedResult = await this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                sort: '-updated',
+                expand: 'transaction, transaction.createdby',
+                filter: `transaction.ausschuss = "${ausschuss}" && state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`,
+            });
 
             for (const item of authorizedResult) {
                 budget += item.expand?.transaction.amount ?? 0;
                 budget += item.expand?.transaction.amount_bar ?? 0;
             }
 
-            const inProgressResult = await this.client
-                .collection('transactionAuth')
-                .getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                    sort: '-updated',
-                    expand: 'transaction, transaction.createdby',
-                    filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions['In Bearbeitung']}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`,
-                });
+            const inProgressResult = await this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                sort: '-updated',
+                expand: 'transaction, transaction.createdby',
+                filter: `transaction.ausschuss = "${ausschuss}" && state = "${TransactionAuthStateOptions['In Bearbeitung']}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`,
+            });
 
             for (const item of inProgressResult) {
                 budget += item.expand?.transaction.amount ?? 0;
@@ -157,9 +150,7 @@ class pb {
     async overAllBudget(): Promise<number> {
         let budget = 0;
         try {
-            const authorizedResult = await this.client
-                .collection('budget')
-                .getFullList();
+            const authorizedResult = await this.client.collection('budget').getFullList();
 
             for (const item of authorizedResult) {
                 if (item.id == 'overall') {
@@ -179,26 +170,22 @@ class pb {
         let konto = 0;
         let bar = 0;
         try {
-            const authorizedResult = await this.client
-                .collection('transactionAuth')
-                .getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                    sort: '-updated',
-                    expand: 'transaction',
-                    filter: `state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`,
-                });
+            const authorizedResult = await this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                sort: '-updated',
+                expand: 'transaction',
+                filter: `state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`,
+            });
 
             for (const item of authorizedResult) {
                 konto += item.expand?.transaction.amount ?? 0;
                 bar += item.expand?.transaction.amount_bar ?? 0;
             }
 
-            const inProgressResult = await this.client
-                .collection('transactionAuth')
-                .getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                    sort: '-updated',
-                    expand: 'transaction',
-                    filter: `state = "${TransactionAuthStateOptions['In Bearbeitung']}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`,
-                });
+            const inProgressResult = await this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
+                sort: '-updated',
+                expand: 'transaction',
+                filter: `state = "${TransactionAuthStateOptions['In Bearbeitung']}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`,
+            });
 
             for (const item of inProgressResult) {
                 konto += item.expand?.transaction.amount ?? 0;
@@ -221,46 +208,28 @@ class pb {
             .collection('transactionAuth')
             .subscribe<TransactionAuthResponse<ExpandTransaction>>(
                 '*',
-                e => {
+                (e) => {
                     console.log('Transaction Auth update:', e);
                     if (e.action === 'delete') {
-                        this.transaction.value = this.transaction.value.filter(
-                            item => item.id !== e.record.id,
-                        );
+                        this.transaction.value = this.transaction.value.filter((item) => item.id !== e.record.id);
                     } else if (e.action === 'update') {
-                        const index = this.transaction.value.findIndex(
-                            item => item.id === e.record.id,
-                        );
+                        const index = this.transaction.value.findIndex((item) => item.id === e.record.id);
                         if (index !== -1) {
                             this.transaction.value[index] = e.record;
                         } else {
                             const currentAusschuss = this.getCurrentAusschuss();
-                            if (
-                                !currentAusschuss ||
-                                e.record.expand?.transaction?.ausschuss ===
-                                    currentAusschuss
-                            ) {
+                            if (!currentAusschuss || e.record.expand?.transaction?.ausschuss === currentAusschuss) {
                                 this.transaction.value.push(e.record);
                             }
                         }
                     } else if (e.action === 'create') {
-                        const exists = this.transaction.value.some(
-                            item => item.id === e.record.id,
-                        );
+                        const exists = this.transaction.value.some((item) => item.id === e.record.id);
 
                         if (!exists) {
                             const currentAusschuss = this.getCurrentAusschuss();
-                            if (
-                                !currentAusschuss ||
-                                e.record.expand?.transaction?.ausschuss ===
-                                    currentAusschuss
-                            ) {
+                            if (!currentAusschuss || e.record.expand?.transaction?.ausschuss === currentAusschuss) {
                                 this.transaction.value.push(e.record);
-                                this.transaction.value.sort(
-                                    (a, b) =>
-                                        new Date(b.updated).getTime() -
-                                        new Date(a.updated).getTime(),
-                                );
+                                this.transaction.value.sort((a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime());
                             }
                         }
                     }
@@ -269,89 +238,59 @@ class pb {
                     expand: 'transaction.createdby, transaction, transaction.milestone',
                 },
             )
-            .catch(error => {
-                console.error(
-                    'Error subscribing to transactionAuth collection:',
-                    error,
-                );
+            .catch((error) => {
+                console.error('Error subscribing to transactionAuth collection:', error);
             });
 
-        this.client
-            .collection('transaction')
-            .subscribe<TransactionResponse>('*', e => {
-                console.log('Transaction update:', e);
-                if (e.action === 'delete') {
-                    this.transaction.value = this.transaction.value.filter(
-                        item => item.expand?.transaction?.id !== e.record.id,
-                    );
-                } else if (e.action === 'update') {
-                    for (let i = 0; i < this.transaction.value.length; i++) {
-                        if (
-                            this.transaction.value[i].expand?.transaction
-                                ?.id === e.record.id
-                        ) {
-                            if (this.transaction.value[i].expand) {
-                                this.transaction.value[i].expand!.transaction =
-                                    e.record as TransactionResponse<ExpandTransactionMilestone>;
-                            }
+        this.client.collection('transaction').subscribe<TransactionResponse>('*', (e) => {
+            console.log('Transaction update:', e);
+            if (e.action === 'delete') {
+                this.transaction.value = this.transaction.value.filter((item) => item.expand?.transaction?.id !== e.record.id);
+            } else if (e.action === 'update') {
+                for (let i = 0; i < this.transaction.value.length; i++) {
+                    if (this.transaction.value[i].expand?.transaction?.id === e.record.id) {
+                        if (this.transaction.value[i].expand) {
+                            this.transaction.value[i].expand!.transaction = e.record as TransactionResponse<ExpandTransactionMilestone>;
                         }
                     }
                 }
-            });
+            }
+        });
 
         this.client
             .collection('milestone')
             .subscribe<MilestoneResponse<ExpandMilestones>>(
                 '*',
-                e => {
+                (e) => {
                     console.log('Milestone update:', e);
                     if (e.action === 'delete') {
-                        this.milestone.value = this.milestone.value.filter(
-                            item => item.id !== e.record.id,
-                        );
+                        this.milestone.value = this.milestone.value.filter((item) => item.id !== e.record.id);
                     } else if (e.action === 'update') {
-                        const index = this.milestone.value.findIndex(
-                            item => item.id === e.record.id,
-                        );
+                        const index = this.milestone.value.findIndex((item) => item.id === e.record.id);
                         if (index !== -1) {
                             this.milestone.value[index] = e.record;
                         } else {
                             const currentAusschuss = this.getCurrentAusschuss();
-                            if (
-                                !currentAusschuss ||
-                                e.record.ausschuss === currentAusschuss
-                            ) {
+                            if (!currentAusschuss || e.record.ausschuss === currentAusschuss) {
                                 this.milestone.value.push(e.record);
                             }
                         }
                     } else if (e.action === 'create') {
-                        const exists = this.milestone.value.some(
-                            item => item.id === e.record.id,
-                        );
+                        const exists = this.milestone.value.some((item) => item.id === e.record.id);
 
                         if (!exists) {
                             const currentAusschuss = this.getCurrentAusschuss();
-                            if (
-                                !currentAusschuss ||
-                                e.record.ausschuss === currentAusschuss
-                            ) {
+                            if (!currentAusschuss || e.record.ausschuss === currentAusschuss) {
                                 this.milestone.value.push(e.record);
-                                this.milestone.value.sort(
-                                    (a, b) =>
-                                        new Date(b.updated).getTime() -
-                                        new Date(a.updated).getTime(),
-                                );
+                                this.milestone.value.sort((a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime());
                             }
                         }
                     }
                 },
                 { expand: 'transaction' },
             )
-            .catch(error => {
-                console.error(
-                    'Error subscribing to milestone collection:',
-                    error,
-                );
+            .catch((error) => {
+                console.error('Error subscribing to milestone collection:', error);
             });
     }
 
@@ -362,10 +301,7 @@ class pb {
     }
     async getFileFromUrl(record: TransactionResponse<unknown>, file: string) {
         const token = await usePocketBase().files.getToken();
-        return window.open(
-            usePocketBase().files.getURL(record, file, { token: token }),
-            '_blank',
-        );
+        return window.open(usePocketBase().files.getURL(record, file, { token: token }), '_blank');
     }
 
     async getFileURL(record: TransactionResponse<unknown>, file: string) {
@@ -385,7 +321,16 @@ export type ExpandTransactionMilestone = {
     createdby: UsersResponse;
 };
 
-type ExpandTransactionCommittee = {
+export type ExpandTimeTable = {
+    shift_via_timetable: ShiftResponse<ExpandShift>[];
+};
+
+export type ExpandShift = {
+    createdby: UsersResponse;
+    people: PeopleResponse[];
+};
+
+export type ExpandTransactionCommittee = {
     ausschuss: AusschussResponse;
 };
 

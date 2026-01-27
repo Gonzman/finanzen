@@ -28,12 +28,16 @@
                 <div class="flex items-center justify-between p-4 bg-gray-50 border-b">
                     <div>
                         <h3 class="font-semibold text-lg">{{ timetable.name }}</h3>
-                        <p class="text-sm text-gray-500">{{ timetable.shifts.length }} Schicht(en)</p>
+                        <p class="text-sm text-gray-500">{{ timetable.expand?.shift_via_timetable?.length ?? 0 }}
+                            Schicht(en)
+                        </p>
                     </div>
                     <div class="flex gap-2">
                         <Button variant="default" size="sm" @click="openAddShiftDialog(timetable)">
                             + Schicht hinzufügen
                         </Button>
+                        <RenameTimetable :timetable-id="timetable.id" :timetable-name="timetable.name"
+                            @rename="renameTimetable" />
                         <DeleteTimetable :timetable-id="timetable.id" :timetable-name="timetable.name"
                             @delete="deleteTimetable" />
                     </div>
@@ -109,13 +113,9 @@ import { usePocketBase, useUser } from '@/components/usePocketbase';
 import type { TimetableResponse, ShiftResponse, PeopleResponse } from '@/lib/pocketbase-types';
 import CreateTimetable from './modal/CreateTimetable.vue';
 import DeleteTimetable from './modal/DeleteTimetable.vue';
-import ShiftDialog, { type Shift } from './modal/ShiftDialog.vue';
-
-interface Timetable {
-    id: string;
-    name: string;
-    shifts: Shift[];
-}
+import RenameTimetable from './modal/RenameTimetable.vue';
+import ShiftDialog from './modal/ShiftDialog.vue';
+import type { ExpandShift, ExpandTimeTable } from '@/lib/pb';
 
 const props = defineProps({
     committee: {
@@ -127,11 +127,11 @@ const props = defineProps({
 const client = usePocketBase();
 const user = useUser();
 
-const timetables = ref<Timetable[]>([]);
+const timetables = ref<TimetableResponse<ExpandTimeTable>[]>([]);
 const isLoading = ref(false);
 const showShiftDialog = ref(false);
-const currentTimetable = ref<Timetable | null>(null);
-const editingShift = ref<Shift | null>(null);
+const currentTimetable = ref<TimetableResponse<ExpandTimeTable> | null>(null);
+const editingShift = ref<ShiftResponse<ExpandShift> | null>(null);
 const peopleMap = ref<Map<string, string>>(new Map());
 
 // Fetch all people and create a lookup map
@@ -155,36 +155,11 @@ function getPersonName(personId: string): string {
 async function fetchTimetables() {
     isLoading.value = true;
     try {
-        const timetableRecords = await client.collection('timetable').getFullList<TimetableResponse>({
+        timetables.value = await client.collection('timetable').getFullList<TimetableResponse<ExpandTimeTable>>({
             filter: `ausschuss = "${props.committee.id}"`,
+            expand: 'shift_via_timetable, shift_via_timetable.createdby, shift_via_timetable.people',
             sort: '-created',
         });
-
-        const result: Timetable[] = [];
-
-        for (const tt of timetableRecords) {
-            const shiftRecords = await client.collection('shift').getFullList<ShiftResponse>({
-                filter: `timetable = "${tt.id}"`,
-                sort: 'date,startTime',
-            });
-
-            const shifts: Shift[] = shiftRecords.map(s => ({
-                id: s.id,
-                date: s.date.split(' ')[0], // Extract date part from ISO string
-                purpose: s.purpose,
-                startTime: s.startTime,
-                endTime: s.endTime,
-                people: (s.people as string[]) || [],
-            }));
-
-            result.push({
-                id: tt.id,
-                name: tt.name,
-                shifts,
-            });
-        }
-
-        timetables.value = result;
     } catch (error) {
         console.error('Error fetching timetables:', error);
     } finally {
@@ -203,8 +178,9 @@ onMounted(() => {
 });
 
 // Date helper functions
-function getUniqueDates(timetable: Timetable): string[] {
-    const dates = [...new Set(timetable.shifts.map(s => s.date))];
+function getUniqueDates(timetable: TimetableResponse<ExpandTimeTable>): string[] {
+    if (!timetable.expand?.shift_via_timetable) return [];
+    const dates = [...new Set(timetable.expand.shift_via_timetable.map(s => s.date))];
     return dates.sort();
 }
 
@@ -225,13 +201,14 @@ function isToday(dateStr: string): boolean {
 }
 
 // Shift positioning functions
-function getShiftsForDate(timetable: Timetable, date: string): Shift[] {
-    return timetable.shifts
+function getShiftsForDate(timetable: TimetableResponse<ExpandTimeTable>, date: string): ShiftResponse<ExpandShift>[] {
+    if (!timetable.expand?.shift_via_timetable) return [];
+    return timetable.expand.shift_via_timetable
         .filter(s => s.date === date)
         .sort((a, b) => a.startTime.localeCompare(b.startTime));
 }
 
-function getShiftDurationMinutes(shift: Shift): number {
+function getShiftDurationMinutes(shift: ShiftResponse<ExpandShift>): number {
     const [startH, startM] = shift.startTime.split(':').map(Number);
     const [endH, endM] = shift.endTime.split(':').map(Number);
     let startMinutes = startH * 60 + startM;
@@ -242,7 +219,7 @@ function getShiftDurationMinutes(shift: Shift): number {
     return endMinutes - startMinutes;
 }
 
-function getShiftHeight(shift: Shift): number {
+function getShiftHeight(shift: ShiftResponse<ExpandShift>): number {
     const durationMinutes = getShiftDurationMinutes(shift);
     return Math.max(60, (durationMinutes / 60) * 40);
 }
@@ -252,7 +229,7 @@ function timeToMinutes(time: string): number {
     return h * 60 + m;
 }
 
-function shiftsOverlap(a: Shift, b: Shift): boolean {
+function shiftsOverlap(a: ShiftResponse<ExpandShift>, b: ShiftResponse<ExpandShift>): boolean {
     let aStart = timeToMinutes(a.startTime);
     let aEnd = timeToMinutes(a.endTime);
     let bStart = timeToMinutes(b.startTime);
@@ -263,7 +240,7 @@ function shiftsOverlap(a: Shift, b: Shift): boolean {
 }
 
 interface PositionedShift {
-    shift: Shift;
+    shift: ShiftResponse<ExpandShift>;
     style: {
         top: string;
         left: string;
@@ -282,14 +259,14 @@ function stringToColor(str: string): string {
     return `hsl(${hue}, 65%, 50%)`;
 }
 
-function getPositionedShifts(timetable: Timetable, date: string): PositionedShift[] {
+function getPositionedShifts(timetable: TimetableResponse<ExpandTimeTable>, date: string): PositionedShift[] {
     const shifts = getShiftsForDate(timetable, date);
     if (shifts.length === 0) return [];
 
     const minStart = Math.min(...shifts.map(s => timeToMinutes(s.startTime)));
     const PIXELS_PER_HOUR = 40;
 
-    const columns: Shift[][] = [];
+    const columns: ShiftResponse<ExpandShift>[][] = [];
 
     for (const shift of shifts) {
         let placed = false;
@@ -333,7 +310,7 @@ function getPositionedShifts(timetable: Timetable, date: string): PositionedShif
     return result;
 }
 
-function getDayContainerHeight(timetable: Timetable, date: string): string {
+function getDayContainerHeight(timetable: TimetableResponse<ExpandTimeTable>, date: string): string {
     const shifts = getShiftsForDate(timetable, date);
     if (shifts.length === 0) return '120px';
 
@@ -354,17 +331,15 @@ function getDayContainerHeight(timetable: Timetable, date: string): string {
 // Timetable operations
 async function createTimetable(name: string) {
     try {
-        const newTimetable = await client.collection('timetable').create({
+        let newTimetable = await client.collection('timetable').create({
             name,
             ausschuss: props.committee.id,
             createdby: user.userId,
-        });
+        }) as TimetableResponse;
 
-        timetables.value.push({
-            id: newTimetable.id,
-            name: newTimetable.name,
-            shifts: [],
-        });
+        newTimetable.expand = { shift_via_timetable: [] } as ExpandTimeTable;
+
+        timetables.value.push(newTimetable as TimetableResponse<ExpandTimeTable>);
     } catch (error) {
         console.error('Error creating timetable:', error);
     }
@@ -372,7 +347,12 @@ async function createTimetable(name: string) {
 
 async function deleteTimetable(id: string) {
     try {
+        const shifts = await client.collection("shift").getFullList({ filter: `timetable = "${id}"` });
         await client.collection('timetable').delete(id);
+        for (const shift of shifts) {
+
+            await client.collection("shift").delete(shift.id)
+        }
         const index = timetables.value.findIndex(t => t.id === id);
         if (index !== -1) {
             timetables.value.splice(index, 1);
@@ -382,58 +362,82 @@ async function deleteTimetable(id: string) {
     }
 }
 
+async function renameTimetable(id: string, name: string) {
+    try {
+        await client.collection('timetable').update(id, { name });
+        const index = timetables.value.findIndex(t => t.id === id);
+        if (index !== -1) {
+            timetables.value[index].name = name;
+        }
+    } catch (error) {
+        console.error('Error renaming timetable:', error);
+    }
+}
+
 // Shift dialog operations
-function openAddShiftDialog(timetable: Timetable) {
+function openAddShiftDialog(timetable: TimetableResponse<ExpandTimeTable>) {
     currentTimetable.value = timetable;
     editingShift.value = null;
     showShiftDialog.value = true;
 }
 
-function openEditShiftDialog(timetable: Timetable, shift: Shift) {
+function openEditShiftDialog(timetable: TimetableResponse<ExpandTimeTable>, shift: ShiftResponse<ExpandShift>) {
     currentTimetable.value = timetable;
     editingShift.value = shift;
     showShiftDialog.value = true;
 }
 
-async function handleSaveShift(shiftData: Omit<Shift, 'id'>) {
+async function handleSaveShift(shiftData: { date: string; purpose: string; startTime: string; endTime: string; people: string[] }) {
     if (!currentTimetable.value) return;
     try {
-        const newShift = await client.collection('shift').create({
+        let newShift = await client.collection('shift').create({
             timetable: currentTimetable.value.id,
             date: shiftData.date,
             purpose: shiftData.purpose,
             startTime: shiftData.startTime,
             endTime: shiftData.endTime,
             people: shiftData.people,
-        });
+        }) as ShiftResponse<ExpandShift>
 
-        currentTimetable.value.shifts.push({
-            id: newShift.id,
-            date: newShift.date.split(' ')[0],
-            purpose: newShift.purpose,
-            startTime: newShift.startTime,
-            endTime: newShift.endTime,
-            people: (newShift.people as string[]) || [],
-        });
+        newShift.expand = {} as ExpandShift;
+        newShift.expand.createdby = await usePocketBase().collection("users").getOne(useUser().userId)
+        newShift.expand.people = []
+
+        if (!currentTimetable.value.expand) {
+            currentTimetable.value.expand = { shift_via_timetable: [] } as ExpandTimeTable;
+        }
+        currentTimetable.value.expand.shift_via_timetable.push(newShift);
     } catch (error) {
         console.error('Error creating shift:', error);
     }
 }
 
-async function handleUpdateShift(shift: Shift) {
+async function handleUpdateShift(shift: { id: string; date: string; purpose: string; startTime: string; endTime: string; people: string[] }) {
     if (!currentTimetable.value) return;
     try {
-        await client.collection('shift').update(shift.id, {
+        const newshift = await client.collection('shift').update(shift.id, {
             date: shift.date,
             purpose: shift.purpose,
             startTime: shift.startTime,
             endTime: shift.endTime,
             people: shift.people,
-        });
+        }) as ShiftResponse<ExpandShift>;
 
-        const index = currentTimetable.value.shifts.findIndex(s => s.id === shift.id);
-        if (index !== -1) {
-            currentTimetable.value.shifts[index] = shift;
+        newshift.expand = {} as ExpandShift;
+        newshift.expand.createdby = await usePocketBase().collection("users").getOne(useUser().userId)
+
+        if (shift.people && shift.people.length > 0) {
+            const peopleFilter = shift.people.map(id => `id = "${id}"`).join(" || ");
+            newshift.expand.people = await usePocketBase().collection("people").getFullList({ filter: peopleFilter })
+        } else {
+            newshift.expand.people = []
+        }
+
+        if (currentTimetable.value.expand?.shift_via_timetable) {
+            const index = currentTimetable.value.expand.shift_via_timetable.findIndex(s => s.id === shift.id);
+            if (index !== -1) {
+                currentTimetable.value.expand.shift_via_timetable[index] = newshift;
+            }
         }
     } catch (error) {
         console.error('Error updating shift:', error);
@@ -444,9 +448,11 @@ async function handleDeleteShift(shiftId: string) {
     if (!currentTimetable.value) return;
     try {
         await client.collection('shift').delete(shiftId);
-        const index = currentTimetable.value.shifts.findIndex(s => s.id === shiftId);
-        if (index !== -1) {
-            currentTimetable.value.shifts.splice(index, 1);
+        if (currentTimetable.value.expand?.shift_via_timetable) {
+            const index = currentTimetable.value.expand.shift_via_timetable.findIndex(s => s.id === shiftId);
+            if (index !== -1) {
+                currentTimetable.value.expand.shift_via_timetable.splice(index, 1);
+            }
         }
     } catch (error) {
         console.error('Error deleting shift:', error);

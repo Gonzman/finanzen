@@ -26,19 +26,10 @@ import {
 } from '@/components/ui/popover';
 import { ref, reactive, watch, type PropType } from 'vue';
 import { usePocketBase } from '@/components/usePocketbase';
-import type { PeopleResponse } from '@/lib/pocketbase-types';
+import type { PeopleResponse, ShiftResponse } from '@/lib/pocketbase-types';
 import { Check, ChevronsUpDown } from 'lucide-vue-next';
 import { cn } from '@/lib/utils';
-import pb from '@/lib/pb';
-
-export interface Shift {
-    id: string;
-    date: string;
-    purpose: string;
-    startTime: string;
-    endTime: string;
-    people: string[];
-}
+import { type ExpandShift } from '@/lib/pb';
 
 const props = defineProps({
     open: {
@@ -46,7 +37,7 @@ const props = defineProps({
         required: true,
     },
     shift: {
-        type: Object as PropType<Shift | null>,
+        type: Object as PropType<ShiftResponse<ExpandShift> | null>,
         default: null,
     },
     committeeId: {
@@ -57,8 +48,8 @@ const props = defineProps({
 
 const emit = defineEmits<{
     (e: 'update:open', value: boolean): void;
-    (e: 'save', shift: Omit<Shift, 'id'>): void;
-    (e: 'update', shift: Shift): void;
+    (e: 'save', shift: { date: string; purpose: string; startTime: string; endTime: string; people: string[] }): void;
+    (e: 'update', shift: { id: string; date: string; purpose: string; startTime: string; endTime: string; people: string[] }): void;
     (e: 'delete', shiftId: string): void;
 }>();
 
@@ -194,13 +185,6 @@ function handleKeydown(event: KeyboardEvent) {
         event.preventDefault();
         createAndAddPerson();
     }
-}
-
-// Check if the search query matches any existing person
-function hasExactMatch(): boolean {
-    const query = searchQuery.value.trim().toLowerCase();
-    if (!query) return true;
-    return peopleList.value.some(p => p.name.toLowerCase() === query);
 }
 
 watch(

@@ -13,7 +13,7 @@ import Pruefen from './modal/pruefen.vue';
 import Details from './modal/details.vue';
 import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse } from '@/lib/pocketbase-types';
 import TransactionStateIcon from '@/components/dashboard/TransactionStateIcon.vue';
-import { formatCurrency, formatTransaction } from '@/ts/format';
+import { formatTransaction } from '@/ts/format';
 
 const props = defineProps({
   committee: {
