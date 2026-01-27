@@ -406,6 +406,9 @@ async function handleSaveShift(shiftData: { date: string; purpose: string; start
         if (!currentTimetable.value.expand) {
             currentTimetable.value.expand = { shift_via_timetable: [] } as ExpandTimeTable;
         }
+        if (!currentTimetable.value.expand.shift_via_timetable) {
+            currentTimetable.value.expand.shift_via_timetable = [];
+        }
         currentTimetable.value.expand.shift_via_timetable.push(newShift);
     } catch (error) {
         console.error('Error creating shift:', error);
