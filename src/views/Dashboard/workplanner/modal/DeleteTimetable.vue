@@ -11,6 +11,9 @@ import {
     DialogClose,
 } from '@/components/ui/dialog';
 import { ref } from 'vue';
+import { usePocketBase } from '@/components/usePocketbase';
+
+const client = usePocketBase();
 
 const props = defineProps({
     timetableName: {
@@ -29,9 +32,18 @@ const emit = defineEmits<{
 
 const open = ref(false);
 
-function handleDelete() {
-    emit('delete', props.timetableId);
-    open.value = false;
+async function handleDelete() {
+    try {
+        const shifts = await client.collection('shift').getFullList({ filter: `timetable = "${props.timetableId}"` });
+        await client.collection('timetable').delete(props.timetableId);
+        for (const shift of shifts) {
+            await client.collection('shift').delete(shift.id);
+        }
+        emit('delete', props.timetableId);
+        open.value = false;
+    } catch (error) {
+        console.error('Error deleting timetable:', error);
+    }
 }
 </script>
 

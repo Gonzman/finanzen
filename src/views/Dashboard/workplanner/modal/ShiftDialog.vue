@@ -25,7 +25,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { ref, reactive, watch, type PropType } from 'vue';
-import { usePocketBase } from '@/components/usePocketbase';
+import { usePocketBase, useUser } from '@/components/usePocketbase';
 import type { PeopleResponse, ShiftResponse } from '@/lib/pocketbase-types';
 import { Check, ChevronsUpDown } from 'lucide-vue-next';
 import { cn } from '@/lib/utils';
@@ -48,12 +48,13 @@ const props = defineProps({
 
 const emit = defineEmits<{
     (e: 'update:open', value: boolean): void;
-    (e: 'save', shift: { date: string; purpose: string; startTime: string; endTime: string; people: string[] }): void;
-    (e: 'update', shift: { id: string; date: string; purpose: string; startTime: string; endTime: string; people: string[] }): void;
+    (e: 'save', shift: ShiftResponse<ExpandShift>): void;
+    (e: 'update', shift: ShiftResponse<ExpandShift>): void;
     (e: 'delete', shiftId: string): void;
 }>();
 
 const client = usePocketBase();
+const user = useUser();
 
 const form = reactive({
     date: '',
@@ -219,34 +220,58 @@ function closeDialog() {
     emit('update:open', false);
 }
 
-function handleSave() {
+async function handleSave() {
     if (!form.date || !form.purpose.trim()) return;
 
-    if (isEditing.value && props.shift) {
-        emit('update', {
-            id: props.shift.id,
-            date: form.date,
-            purpose: form.purpose.trim(),
-            startTime: form.startTime,
-            endTime: form.endTime,
-            people: [...form.people],
-        });
-    } else {
-        emit('save', {
-            date: form.date,
-            purpose: form.purpose.trim(),
-            startTime: form.startTime,
-            endTime: form.endTime,
-            people: [...form.people],
-        });
+    try {
+        if (isEditing.value && props.shift) {
+            // Update existing shift
+            const updatedShift = await client.collection('shift').update(props.shift.id, {
+                date: form.date,
+                purpose: form.purpose.trim(),
+                startTime: form.startTime,
+                endTime: form.endTime,
+                people: [...form.people],
+            }) as ShiftResponse<ExpandShift>;
+
+            updatedShift.expand = {} as ExpandShift;
+            updatedShift.expand.createdby = await client.collection('users').getOne(user.userId);
+
+            if (form.people && form.people.length > 0) {
+                const peopleFilter = form.people.map(id => `id = "${id}"`).join(' || ');
+                updatedShift.expand.people = await client.collection('people').getFullList({ filter: peopleFilter });
+            } else {
+                updatedShift.expand.people = [];
+            }
+
+            emit('update', updatedShift);
+        } else {
+            // Create new shift - need timetableId from parent
+            // Since we don't have timetableId here, we still need parent to handle creation
+            // But we'll prepare the full shift object
+            emit('save', {
+                date: form.date,
+                purpose: form.purpose.trim(),
+                startTime: form.startTime,
+                endTime: form.endTime,
+                people: [...form.people],
+            } as any);
+        }
+        closeDialog();
+    } catch (error) {
+        console.error('Error saving shift:', error);
     }
-    closeDialog();
 }
 
-function handleDelete() {
+async function handleDelete() {
     if (props.shift) {
-        emit('delete', props.shift.id);
-        closeDialog();
+        try {
+            await client.collection('shift').delete(props.shift.id);
+            emit('delete', props.shift.id);
+            closeDialog();
+        } catch (error) {
+            console.error('Error deleting shift:', error);
+        }
     }
 }
 </script>

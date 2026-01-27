@@ -13,6 +13,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ref, watch } from 'vue';
+import { usePocketBase } from '@/components/usePocketbase';
+
+const client = usePocketBase();
 
 const props = defineProps({
     timetableName: {
@@ -38,10 +41,15 @@ watch(open, (newOpen) => {
     }
 });
 
-function handleRename() {
+async function handleRename() {
     if (!name.value.trim()) return;
-    emit('rename', props.timetableId, name.value.trim());
-    open.value = false;
+    try {
+        await client.collection('timetable').update(props.timetableId, { name: name.value.trim() });
+        emit('rename', props.timetableId, name.value.trim());
+        open.value = false;
+    } catch (error) {
+        console.error('Error renaming timetable:', error);
+    }
 }
 
 function handleKeyEnter() {

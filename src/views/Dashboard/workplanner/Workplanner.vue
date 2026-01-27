@@ -3,7 +3,7 @@
         <!-- Header mit Dienstplan erstellen Button -->
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold">Dienstplaner</h2>
-            <CreateTimetable @create="createTimetable" />
+            <CreateTimetable :committee-id="props.committee.id" @create="createTimetable" />
         </div>
 
         <!-- Ladezustand -->
@@ -21,9 +21,9 @@
             </div>
         </div>
 
-        <div v-else class="flex-1 overflow-auto flex flex-col gap-6">
+        <div v-else class="flex-1 overflow-x-auto overflow-y-hidden flex flex-row snap-x snap-mandatory">
             <div v-for="timetable in timetables" :key="timetable.id"
-                class="bg-white rounded-lg border shadow-sm overflow-hidden">
+                class="bg-white border-r shadow-sm flex-shrink-0 w-full h-full snap-start flex flex-col overflow-y-auto">
                 <!-- Timetable Header -->
                 <div class="flex items-center justify-between p-4 bg-gray-50 border-b">
                     <div>
@@ -44,8 +44,8 @@
                 </div>
 
                 <!-- Calendar Table - Only dates with shifts -->
-                <div v-if="getUniqueDates(timetable).length > 0" class="overflow-x-auto">
-                    <table class="w-full border-collapse">
+                <div v-if="getUniqueDates(timetable).length > 0" class="overflow-auto flex-1">
+                    <table class="w-full border-collapse h-full">
                         <thead>
                             <tr class="bg-gray-100">
                                 <th v-for="date in getUniqueDates(timetable)" :key="date"
@@ -93,7 +93,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div v-else class="p-8 text-center text-gray-500">
+                <div v-else class="p-8 text-center text-gray-500 flex-1 flex items-center justify-center">
                     <p>Noch keine Schichten vorhanden. Klicke auf "Schicht hinzufügen" um eine zu erstellen.</p>
                 </div>
             </div>
@@ -329,48 +329,21 @@ function getDayContainerHeight(timetable: TimetableResponse<ExpandTimeTable>, da
 }
 
 // Timetable operations
-async function createTimetable(name: string) {
-    try {
-        let newTimetable = await client.collection('timetable').create({
-            name,
-            ausschuss: props.committee.id,
-            createdby: user.userId,
-        }) as TimetableResponse;
+function createTimetable(timetable: TimetableResponse<ExpandTimeTable>) {
+    timetables.value.push(timetable);
+}
 
-        newTimetable.expand = { shift_via_timetable: [] } as ExpandTimeTable;
-
-        timetables.value.push(newTimetable as TimetableResponse<ExpandTimeTable>);
-    } catch (error) {
-        console.error('Error creating timetable:', error);
+function deleteTimetable(id: string) {
+    const index = timetables.value.findIndex(t => t.id === id);
+    if (index !== -1) {
+        timetables.value.splice(index, 1);
     }
 }
 
-async function deleteTimetable(id: string) {
-    try {
-        const shifts = await client.collection("shift").getFullList({ filter: `timetable = "${id}"` });
-        await client.collection('timetable').delete(id);
-        for (const shift of shifts) {
-
-            await client.collection("shift").delete(shift.id)
-        }
-        const index = timetables.value.findIndex(t => t.id === id);
-        if (index !== -1) {
-            timetables.value.splice(index, 1);
-        }
-    } catch (error) {
-        console.error('Error deleting timetable:', error);
-    }
-}
-
-async function renameTimetable(id: string, name: string) {
-    try {
-        await client.collection('timetable').update(id, { name });
-        const index = timetables.value.findIndex(t => t.id === id);
-        if (index !== -1) {
-            timetables.value[index].name = name;
-        }
-    } catch (error) {
-        console.error('Error renaming timetable:', error);
+function renameTimetable(id: string, name: string) {
+    const index = timetables.value.findIndex(t => t.id === id);
+    if (index !== -1) {
+        timetables.value[index].name = name;
     }
 }
 
@@ -400,7 +373,7 @@ async function handleSaveShift(shiftData: { date: string; purpose: string; start
         }) as ShiftResponse<ExpandShift>
 
         newShift.expand = {} as ExpandShift;
-        newShift.expand.createdby = await usePocketBase().collection("users").getOne(useUser().userId)
+        newShift.expand.createdby = await client.collection("users").getOne(user.userId)
         newShift.expand.people = []
 
         if (!currentTimetable.value.expand) {
@@ -415,50 +388,23 @@ async function handleSaveShift(shiftData: { date: string; purpose: string; start
     }
 }
 
-async function handleUpdateShift(shift: { id: string; date: string; purpose: string; startTime: string; endTime: string; people: string[] }) {
+async function handleUpdateShift(updatedShift: ShiftResponse<ExpandShift>) {
     if (!currentTimetable.value) return;
-    try {
-        const newshift = await client.collection('shift').update(shift.id, {
-            date: shift.date,
-            purpose: shift.purpose,
-            startTime: shift.startTime,
-            endTime: shift.endTime,
-            people: shift.people,
-        }) as ShiftResponse<ExpandShift>;
-
-        newshift.expand = {} as ExpandShift;
-        newshift.expand.createdby = await usePocketBase().collection("users").getOne(useUser().userId)
-
-        if (shift.people && shift.people.length > 0) {
-            const peopleFilter = shift.people.map(id => `id = "${id}"`).join(" || ");
-            newshift.expand.people = await usePocketBase().collection("people").getFullList({ filter: peopleFilter })
-        } else {
-            newshift.expand.people = []
+    if (currentTimetable.value.expand?.shift_via_timetable) {
+        const index = currentTimetable.value.expand.shift_via_timetable.findIndex(s => s.id === updatedShift.id);
+        if (index !== -1) {
+            currentTimetable.value.expand.shift_via_timetable[index] = updatedShift;
         }
-
-        if (currentTimetable.value.expand?.shift_via_timetable) {
-            const index = currentTimetable.value.expand.shift_via_timetable.findIndex(s => s.id === shift.id);
-            if (index !== -1) {
-                currentTimetable.value.expand.shift_via_timetable[index] = newshift;
-            }
-        }
-    } catch (error) {
-        console.error('Error updating shift:', error);
     }
 }
 
 async function handleDeleteShift(shiftId: string) {
     if (!currentTimetable.value) return;
-    try {
-        await client.collection('shift').delete(shiftId);
-        if (currentTimetable.value.expand?.shift_via_timetable) {
-            const index = currentTimetable.value.expand.shift_via_timetable.findIndex(s => s.id === shiftId);
-            if (index !== -1) {
-                currentTimetable.value.expand.shift_via_timetable.splice(index, 1);
-            }
+    if (currentTimetable.value.expand?.shift_via_timetable) {
+        const index = currentTimetable.value.expand.shift_via_timetable.findIndex(s => s.id === shiftId);
+        if (index !== -1) {
+            currentTimetable.value.expand.shift_via_timetable.splice(index, 1);
         }
-    } catch (error) {
-        console.error('Error deleting shift:', error);
     }
 }
 </script>

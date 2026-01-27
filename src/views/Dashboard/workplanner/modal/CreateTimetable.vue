@@ -13,19 +13,44 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ref } from 'vue';
+import { usePocketBase, useUser } from '@/components/usePocketbase';
+import type { TimetableResponse } from '@/lib/pocketbase-types';
+import type { ExpandTimeTable } from '@/lib/pb';
+
+const props = defineProps({
+    committeeId: {
+        type: String,
+        required: true,
+    },
+});
 
 const emit = defineEmits<{
-    (e: 'create', name: string): void;
+    (e: 'create', timetable: TimetableResponse<ExpandTimeTable>): void;
 }>();
+
+const client = usePocketBase();
+const user = useUser();
 
 const open = ref(false);
 const name = ref('');
 
-function handleCreate() {
+async function handleCreate() {
     if (!name.value.trim()) return;
-    emit('create', name.value.trim());
-    name.value = '';
-    open.value = false;
+    try {
+        let newTimetable = await client.collection('timetable').create({
+            name: name.value.trim(),
+            ausschuss: props.committeeId,
+            createdby: user.userId,
+        }) as TimetableResponse;
+
+        newTimetable.expand = { shift_via_timetable: [] } as ExpandTimeTable;
+
+        emit('create', newTimetable as TimetableResponse<ExpandTimeTable>);
+        name.value = '';
+        open.value = false;
+    } catch (error) {
+        console.error('Error creating timetable:', error);
+    }
 }
 
 function handleKeyEnter() {
