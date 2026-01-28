@@ -12,16 +12,16 @@ import { isUserChairOfCommittee } from '@/lib/utils';
 import { formatCurrency } from '@/ts/format';
 
 const props = defineProps({
-    id: {
+    transaction: {
         type: Object as PropType<TransactionAuthResponse<ExpandTransaction>>,
         required: true,
     },
 });
 
-const title = ref(props.id.expand?.transaction.title || '');
-const amountKonto = ref<number | undefined>(props.id.expand?.transaction.amount || undefined);
-const amountBar = ref<number | undefined>(props.id.expand?.transaction.amount_bar || undefined);
-const description = ref(props.id.expand?.transaction.message || '');
+const title = ref(props.transaction.expand?.transaction.title || '');
+const amountKonto = ref<number | undefined>(props.transaction.expand?.transaction.amount || undefined);
+const amountBar = ref<number | undefined>(props.transaction.expand?.transaction.amount_bar || undefined);
+const description = ref(props.transaction.expand?.transaction.message || '');
 const showAmountError = ref(false);
 const images = ref<File[] | null>(null);
 
@@ -46,7 +46,7 @@ function updateTransaction() {
     }
     showAmountError.value = false;
 
-    usePocketBase().collection('transaction').update(props.id.expand!.transaction.id, {
+    usePocketBase().collection('transaction').update(props.transaction.expand!.transaction.id, {
         title: title.value,
         message: description.value,
         amount: amountKonto.value || 0,
@@ -61,10 +61,10 @@ function updateTransaction() {
 }
 
 const hasChanges = computed(() => {
-    return title.value !== props.id.expand?.transaction.title ||
-        (amountKonto.value || 0) !== (props.id.expand?.transaction.amount || 0) ||
-        (amountBar.value || 0) !== (props.id.expand?.transaction.amount_bar || 0) ||
-        description.value !== props.id.expand?.transaction.message;
+    return title.value !== props.transaction.expand?.transaction.title ||
+        (amountKonto.value || 0) !== (props.transaction.expand?.transaction.amount || 0) ||
+        (amountBar.value || 0) !== (props.transaction.expand?.transaction.amount_bar || 0) ||
+        description.value !== props.transaction.expand?.transaction.message;
 });
 
 const isValid = computed(() => {
@@ -83,10 +83,10 @@ function changeImage(event: Event) {
 <template>
     <Dialog>
         <DialogTrigger asChild>
-            <Button variant="ghost" class="text-left w-fulls justify-start" :disabled="!props.id.expand?.transaction?.createdby ||
-                (props.id.expand.transaction.createdby !== useUser().userId && !isUserChairOfCommittee(props) && !useUser().isPruefer()) ||
-                props.id.state === TransactionAuthStateOptions.Autorisiert ||
-                props.id.state === TransactionAuthStateOptions.Abgeschlossen">
+            <Button variant="ghost" class="text-left w-fulls justify-start" :disabled="!props.transaction.expand?.transaction?.createdby ||
+                (props.transaction.expand.transaction.createdby !== useUser().userId && !isUserChairOfCommittee(props.transaction) && !useUser().isPruefer()) ||
+                props.transaction.state === TransactionAuthStateOptions.Autorisiert ||
+                props.transaction.state === TransactionAuthStateOptions.Abgeschlossen">
                 Bearbeiten
             </Button>
         </DialogTrigger>
@@ -99,7 +99,7 @@ function changeImage(event: Event) {
             </DialogHeader>
 
             <Label>Titel</Label>
-            <Input :placeholder="id.expand?.transaction.title || 'Titel'" v-model="title" />
+            <Input :placeholder="transaction.expand?.transaction.title || 'Titel'" v-model="title" />
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -142,7 +142,8 @@ function changeImage(event: Event) {
             </div>
 
             <Label>Beschreibung</Label>
-            <Textarea :placeholder="id.expand?.transaction.message || 'Beschreibung'" v-model="description"></Textarea>
+            <Textarea :placeholder="transaction.expand?.transaction.message || 'Beschreibung'"
+                v-model="description"></Textarea>
 
             <Label>Beleg</Label>
             <Input type="file" multiple @change="changeImage" />

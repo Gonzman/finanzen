@@ -32,7 +32,7 @@ function deleteTransaction() {
     <Dialog>
         <DialogTrigger asChild>
             <Button variant="destructive" class="text-left w-fulls justify-start"
-                :disabled="!(props.id.expand.transaction.createdby === useUser().userId && !isUserChairOfCommittee(props) && !useUser().isPruefer())">
+                :disabled="!(props.id.expand.transaction.createdby === useUser().userId && !isUserChairOfCommittee(props.id) && !useUser().isPruefer())">
                 Löschen
             </Button>
         </DialogTrigger>

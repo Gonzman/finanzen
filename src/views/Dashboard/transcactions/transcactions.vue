@@ -122,7 +122,7 @@ function filterState(t: TransactionAuthResponse<ExpandTransaction>, filter: stri
               <div class="flex flex-col">
                 <Details :id="invoice">Details anzeigen</Details>
                 <Pruefen :id="invoice" v-if="useUser().isPruefer()" />
-                <Edit :id="invoice"
+                <Edit :transaction="invoice"
                   v-if="invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Abgelehnt" />
                 <Delete :id="invoice"
                   v-if="invoice.state != TransactionAuthStateOptions.Abgeschlossen && invoice.state != TransactionAuthStateOptions.Autorisiert && invoice.state != TransactionAuthStateOptions.Abgelehnt" />

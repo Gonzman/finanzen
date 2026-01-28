@@ -3,7 +3,10 @@
         <!-- Header mit Dienstplan erstellen Button -->
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold">Dienstplaner</h2>
-            <CreateTimetable :committee-id="props.committee.id" @create="createTimetable" />
+            <div>
+                <CreateTimetable :committee-id="props.committee.id" @create="createTimetable" />
+                <AnalyzeTimeTable :timetables="timetables"></AnalyzeTimeTable>
+            </div>
         </div>
 
         <!-- Ladezustand -->
@@ -116,6 +119,7 @@ import DeleteTimetable from './modal/DeleteTimetable.vue';
 import RenameTimetable from './modal/RenameTimetable.vue';
 import ShiftDialog from './modal/ShiftDialog.vue';
 import type { ExpandShift, ExpandTimeTable } from '@/lib/pb';
+import AnalyzeTimeTable from './modal/AnalyzeTimeTable.vue';
 
 const props = defineProps({
     committee: {
