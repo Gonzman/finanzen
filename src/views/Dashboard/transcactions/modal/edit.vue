@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { computed, ref, type PropType } from 'vue';
 import { TransactionAuthStateOptions, TransactionTypeOptions, type TransactionAuthResponse } from '@/lib/pocketbase-types';
 import { usePocketBase, useUser } from '@/components/usePocketbase';
-import type { ExpandTransaction } from '@/lib/pb';
+import pb, { type ExpandTransaction } from '@/lib/pb';
 import { isUserChairOfCommittee } from '@/lib/utils';
 import { formatCurrency } from '@/ts/format';
 
@@ -24,6 +24,11 @@ const amountBar = ref<number | undefined>(props.transaction.expand?.transaction.
 const description = ref(props.transaction.expand?.transaction.message || '');
 const showAmountError = ref(false);
 const images = ref<File[] | null>(null);
+const deletedRecipes = ref<string[]>([]);
+const existingRecipes = computed(() => {
+    const allRecipes = props.transaction.expand?.transaction.recipe || [];
+    return allRecipes.filter(recipe => !deletedRecipes.value.includes(recipe));
+});
 
 // Calculate the net effect (positive = gain, negative = loss)
 const netEffect = computed(() => {
@@ -46,14 +51,24 @@ function updateTransaction() {
     }
     showAmountError.value = false;
 
-    usePocketBase().collection('transaction').update(props.transaction.expand!.transaction.id, {
+    const updateData: any = {
         title: title.value,
         message: description.value,
         amount: amountKonto.value || 0,
         amount_bar: amountBar.value || 0,
         type: transactionType.value,
-        recipe: images.value,
-    }).then(() => {
+    };
+
+    // Handle recipe updates
+    if (images.value !== null) {
+        // New files selected - replace all
+        updateData.recipe = images.value;
+    } else if (deletedRecipes.value.length > 0) {
+        // Files were deleted - update with remaining files
+        updateData.recipe = existingRecipes.value;
+    }
+
+    usePocketBase().collection('transaction').update(props.transaction.expand!.transaction.id, updateData).then(() => {
         console.log('Transaction updated successfully');
     }).catch((error) => {
         console.error('Error updating transaction:', error);
@@ -64,7 +79,9 @@ const hasChanges = computed(() => {
     return title.value !== props.transaction.expand?.transaction.title ||
         (amountKonto.value || 0) !== (props.transaction.expand?.transaction.amount || 0) ||
         (amountBar.value || 0) !== (props.transaction.expand?.transaction.amount_bar || 0) ||
-        description.value !== props.transaction.expand?.transaction.message;
+        description.value !== props.transaction.expand?.transaction.message ||
+        deletedRecipes.value.length > 0 ||
+        images.value !== null;
 });
 
 const isValid = computed(() => {
@@ -78,6 +95,28 @@ function changeImage(event: Event) {
         images.value = Array.from(target.files);
     }
 }
+
+async function openAttachment(attachment: string) {
+    const newWindow = window.open('', '_blank');
+    const url = await pb.getFileURL(props.transaction.expand!.transaction, attachment);
+    if (newWindow && url) {
+        newWindow.location.href = url;
+    } else {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = attachment.split('/').pop() || 'download';
+        link.click();
+    }
+}
+
+const truncateFilename = (filename: string, maxLength: number = 30) => {
+    if (filename.length <= maxLength) return filename;
+    return filename.substring(0, maxLength) + '...' + filename.substring(filename.length - 4);
+};
+
+function deleteRecipe(attachment: string) {
+    deletedRecipes.value.push(attachment);
+};
 </script>
 
 <template>
@@ -146,7 +185,29 @@ function changeImage(event: Event) {
                 v-model="description"></Textarea>
 
             <Label>Beleg</Label>
+
+            <!-- Display existing recipes -->
+            <div v-if="existingRecipes.length > 0 && images === null">
+                <span class="text-sm text-muted-foreground">Vorhandene Belege:</span>
+                <div v-for="attachment in existingRecipes" :key="attachment" class="flex gap-2 mt-1">
+                    <Button @click="openAttachment(attachment)" class="flex-1 justify-start" variant="outline">
+                        {{ truncateFilename(attachment.split('/').pop() || '') }}
+                    </Button>
+                    <Button @click="deleteRecipe(attachment)" variant="destructive" size="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                    </Button>
+                </div>
+            </div>
+
             <Input type="file" multiple @change="changeImage" />
+            <div v-if="images !== null" class="text-xs text-muted-foreground mt-1">
+                {{ images.length }} neue(s) Dokument(e) ausgewählt (ersetzt vorhandene Belege)
+            </div>
 
             <DialogClose as-child>
                 <Button @click="updateTransaction" type="button" variant="default" :disabled="!hasChanges || !isValid">

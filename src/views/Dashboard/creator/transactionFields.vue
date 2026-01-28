@@ -24,6 +24,7 @@ const amountBar = ref<number | undefined>(undefined);
 const showAmountError = ref(false);
 
 const images = ref<File[] | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 const user = useUser();
 const pocketbase = usePocketBase();
@@ -81,6 +82,21 @@ function changeImage(event: Event) {
 
 function clearImage() {
     images.value = null;
+    if (fileInput.value) {
+        fileInput.value.value = '';
+    }
+}
+
+function removeFile(index: number) {
+    if (images.value) {
+        images.value = images.value.filter((_, i) => i !== index);
+        if (images.value.length === 0) {
+            images.value = null;
+            if (fileInput.value) {
+                fileInput.value.value = '';
+            }
+        }
+    }
 }
 
 const isValid = computed(() => {
@@ -140,8 +156,28 @@ const isValid = computed(() => {
 
         <div>
             <Label>Belege</Label>
+
+            <!-- Display selected files -->
+            <div v-if="images && images.length > 0" class="mb-2">
+                <span class="text-sm text-muted-foreground">Ausgewählte Dateien:</span>
+                <div v-for="(file, index) in images" :key="index" class="flex gap-2 mt-1">
+                    <div class="flex-1 px-3 py-2 bg-muted rounded text-sm">
+                        {{ file.name }}
+                    </div>
+                    <Button @click="removeFile(index)" variant="destructive" size="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                    </Button>
+                </div>
+            </div>
+
             <div class="flex flex-row justify-end space-x-2">
-                <Input type="file" multiple @change="changeImage" />
+                <input type="file" multiple @change="changeImage" ref="fileInput"
+                    class="flex-1 flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]" />
                 <Button variant="destructive" size="icon" @click="() => clearImage()" :disabled="!images">X</Button>
             </div>
         </div>
