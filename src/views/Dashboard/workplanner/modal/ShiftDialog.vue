@@ -44,6 +44,10 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    dateAnchor: {
+        type: String,
+        default: '',
+    },
 });
 
 const emit = defineEmits<{
@@ -212,7 +216,7 @@ watch(
             } else {
                 // Adding new shift
                 isEditing.value = false;
-                form.date = new Date().toISOString().split('T')[0];
+                form.date = (props.dateAnchor && props.dateAnchor.trim() !== '') ? props.dateAnchor : new Date().toISOString().split('T')[0];
                 form.purpose = '';
                 form.startTime = '09:00';
                 form.endTime = '17:00';

@@ -391,14 +391,21 @@ function openAddShiftDialog(timetable: TimetableResponse<ExpandTimeTable>) {
     editingShift.value = null;
     // Use the last date from the timetable as anchor, or empty string (which will default to today)
     const dates = getUniqueDates(timetable);
-    dateAnchor.value = dates.length > 0 ? dates[dates.length - 1] : '';
+    if (dates.length > 0) {
+        // Extract just the date part (YYYY-MM-DD) in case the date includes timestamp
+        const lastDate = dates[dates.length - 1];
+        dateAnchor.value = lastDate.includes(' ') ? lastDate.split(' ')[0] : lastDate;
+    } else {
+        dateAnchor.value = '';
+    }
     showShiftDialog.value = true;
 }
 
 function openEditShiftDialog(timetable: TimetableResponse<ExpandTimeTable>, shift: ShiftResponse<ExpandShift>) {
     currentTimetable.value = timetable;
     editingShift.value = shift;
-    dateAnchor.value = shift.date; // Use the shift's date as anchor
+    // Extract just the date part (YYYY-MM-DD) in case the date includes timestamp
+    dateAnchor.value = shift.date.includes(' ') ? shift.date.split(' ')[0] : shift.date;
     showShiftDialog.value = true;
 }
 
