@@ -62,6 +62,7 @@ const form = reactive({
     startTime: '09:00',
     endTime: '17:00',
     people: [] as string[],
+    extern: false
 });
 
 const isEditing = ref(false);
@@ -195,14 +196,19 @@ watch(
             fetchPeople();
             if (props.shift) {
                 // Editing existing shift
+                console.log(props.shift.date);
                 isEditing.value = true;
-                form.date = props.shift.date;
+                // Parse date from "2006-01-02 15:04:05.000Z" format to "YYYY-MM-DD"
+                form.date = props.shift.date.split(' ')[0];
                 form.purpose = props.shift.purpose;
                 form.startTime = props.shift.startTime;
                 form.endTime = props.shift.endTime;
-                form.people = [...props.shift.people];
+                form.people = props.shift.people ? [...props.shift.people] : [];
+                form.extern = props.shift.extern
                 // Fetch names for existing people
-                props.shift.people.forEach(fetchPersonName);
+                if (props.shift.people) {
+                    props.shift.people.forEach(fetchPersonName);
+                }
             } else {
                 // Adding new shift
                 isEditing.value = false;
@@ -232,6 +238,7 @@ async function handleSave() {
                 startTime: form.startTime,
                 endTime: form.endTime,
                 people: [...form.people],
+                extern: form.extern
             }) as ShiftResponse<ExpandShift>;
 
             updatedShift.expand = {} as ExpandShift;
@@ -255,6 +262,7 @@ async function handleSave() {
                 startTime: form.startTime,
                 endTime: form.endTime,
                 people: [...form.people],
+                extern: form.extern
             } as any);
         }
         closeDialog();
@@ -292,7 +300,7 @@ async function handleDelete() {
                     <Input id="shift-date" v-model="form.date" type="date" />
                 </div>
                 <div class="grid gap-2">
-                    <Label for="shift-purpose">Zweck</Label>
+                    <Label for="shift-purpose">Aufgabe</Label>
                     <Input id="shift-purpose" v-model="form.purpose" placeholder="z.B. Bardienst, Türdienst" />
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -305,6 +313,14 @@ async function handleDelete() {
                         <Input id="shift-end" v-model="form.endTime" type="time" />
                     </div>
                 </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="flex items-center gap-2">
+                        <Label for="extern">Ist die Schicht außerhalb der regulären Schulzeit?</Label>
+                        <input id="extern" type="checkbox" v-model="form.extern" class="w-4 h-4" />
+                    </div>
+                </div>
+
                 <div class="grid gap-2">
                     <Label>Personen</Label>
                     <div class="flex flex-wrap gap-2 mb-2">

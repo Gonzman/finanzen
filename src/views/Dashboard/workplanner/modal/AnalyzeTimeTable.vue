@@ -25,6 +25,26 @@ const emit = defineEmits<{
 
 const open = ref(false);
 const name = ref('');
+const allPeople = ref<Array<{ id: string; name: string }>>([]);
+
+// Fetch all people when dialog opens
+const fetchAllPeople = async () => {
+    try {
+        const people = await client.collection('people').getFullList({
+            sort: 'name'
+        });
+        allPeople.value = people.map(p => ({ id: p.id, name: p.name }));
+    } catch (error) {
+        console.error('Error fetching people:', error);
+    }
+};
+
+// Watch for dialog open
+const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) {
+        fetchAllPeople();
+    }
+};
 
 // Calculate shift duration in hours
 const calculateShiftDuration = (startTime: string, endTime: string): number => {
@@ -39,7 +59,7 @@ const calculateShiftDuration = (startTime: string, endTime: string): number => {
 
 // Analyze which person did the most shifts
 const personShiftStats = computed(() => {
-    const shiftCounts = new Map<string, { name: string; count: number; totalHours: number; shifts: any[] }>();
+    const shiftCounts = new Map<string, { name: string; count: number; totalHours: number; weightedHours: number; shifts: any[] }>();
 
     prop.timetables.forEach((timetable) => {
         const shifts = timetable.expand?.shift_via_timetable || [];
@@ -47,6 +67,8 @@ const personShiftStats = computed(() => {
         shifts.forEach((shift) => {
             const people = shift.expand?.people || [];
             const duration = calculateShiftDuration(shift.startTime, shift.endTime);
+            const isExtern = shift.extern;
+            const weightedDuration = isExtern ? duration * 2 : duration;
 
             people.forEach((person) => {
                 if (!shiftCounts.has(person.id)) {
@@ -54,6 +76,7 @@ const personShiftStats = computed(() => {
                         name: person.name,
                         count: 0,
                         totalHours: 0,
+                        weightedHours: 0,
                         shifts: []
                     });
                 }
@@ -61,20 +84,36 @@ const personShiftStats = computed(() => {
                 const stats = shiftCounts.get(person.id)!;
                 stats.count++;
                 stats.totalHours += duration;
+                stats.weightedHours += weightedDuration;
                 stats.shifts.push({
                     date: shift.date,
                     startTime: shift.startTime,
                     endTime: shift.endTime,
                     duration: duration,
-                    purpose: shift.purpose
+                    weightedDuration: weightedDuration,
+                    purpose: shift.purpose,
+                    isExtern: isExtern
                 });
             });
         });
     });
 
-    // Convert to array and sort by count (descending)
+    // Add all people to the map, including those with 0 shifts
+    allPeople.value.forEach(person => {
+        if (!shiftCounts.has(person.id)) {
+            shiftCounts.set(person.id, {
+                name: person.name,
+                count: 0,
+                totalHours: 0,
+                weightedHours: 0,
+                shifts: []
+            });
+        }
+    });
+
+    // Convert to array and sort by weighted hours (descending)
     return Array.from(shiftCounts.values())
-        .sort((a, b) => b.count - a.count);
+        .sort((a, b) => b.weightedHours - a.weightedHours);
 });
 
 const totalShifts = computed(() => {
@@ -86,18 +125,18 @@ const totalShifts = computed(() => {
 </script>
 
 <template>
-    <Dialog v-model:open="open">
+    <Dialog v-model:open="open" @update:open="handleOpenChange">
         <DialogTrigger asChild>
             <Button variant="outline" size="sm">Analysieren</Button>
         </DialogTrigger>
-        <DialogContent size="7xl">
+        <DialogContent size="7xl" class="max-h-[90vh] flex flex-col">
             <DialogHeader>
                 <DialogTitle>Schichtanalyse</DialogTitle>
                 <DialogDescription>
                     Übersicht über die Schichtverteilung nach Personen
                 </DialogDescription>
             </DialogHeader>
-            <div class="grid gap-4 py-4">
+            <div class="grid gap-4 py-4 overflow-y-auto flex-1">
                 <div class="mb-4">
                     <p class="text-sm text-muted-foreground">
                         Gesamt Schichten: <strong>{{ totalShifts }}</strong>
@@ -113,8 +152,8 @@ const totalShifts = computed(() => {
                                         <th class="px-4 py-3 text-left text-sm font-medium">Rang</th>
                                         <th class="px-4 py-3 text-left text-sm font-medium">Person</th>
                                         <th class="px-4 py-3 text-right text-sm font-medium">Anzahl Schichten</th>
-                                        <th class="px-4 py-3 text-right text-sm font-medium">Gesamt Stunden</th>
-                                        <th class="px-4 py-3 text-right text-sm font-medium">Ø Stunden/Schicht</th>
+                                        <th class="px-4 py-3 text-right text-sm font-medium">Gesamt Stunden (Gewichtet)
+                                        </th>
                                         <th class="px-4 py-3 text-right text-sm font-medium">Prozent</th>
                                     </tr>
                                 </thead>
@@ -130,7 +169,7 @@ const totalShifts = computed(() => {
                                                 index + 1 }}</span>
                                             <span v-else-if="index === 2"
                                                 class="font-semibold text-orange-600 dark:text-orange-400">🥉 {{ index +
-                                                1 }}</span>
+                                                    1 }}</span>
                                             <span v-else class="text-muted-foreground">{{ index + 1 }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-sm font-medium">
@@ -140,10 +179,8 @@ const totalShifts = computed(() => {
                                             {{ person.count }}
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm font-semibold">
-                                            {{ person.totalHours.toFixed(1) }}h
-                                        </td>
-                                        <td class="px-4 py-3 text-right text-sm text-muted-foreground">
-                                            {{ (person.totalHours / person.count).toFixed(1) }}h
+                                            {{ person.totalHours.toFixed(1) }}h <span class="text-muted-foreground">({{
+                                                person.weightedHours.toFixed(1) }}h)</span>
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm text-muted-foreground">
                                             {{ ((person.count / totalShifts) * 100).toFixed(1) }}%
@@ -163,7 +200,8 @@ const totalShifts = computed(() => {
                             <strong>{{ personShiftStats[0].count }} Schichten</strong>
                             ({{ ((personShiftStats[0].count / totalShifts) * 100).toFixed(1) }}% aller Schichten)
                             und insgesamt <strong>{{ personShiftStats[0].totalHours.toFixed(1) }} Stunden</strong>
-                            gearbeitet.
+                            <span class="text-muted-foreground">({{ personShiftStats[0].weightedHours.toFixed(1) }}h
+                                gewichtet)</span> gearbeitet.
                         </p>
                     </div>
                 </div>

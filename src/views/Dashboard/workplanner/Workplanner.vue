@@ -5,7 +5,7 @@
             <h2 class="text-xl font-semibold">Dienstplaner</h2>
             <div>
                 <CreateTimetable :committee-id="props.committee.id" @create="createTimetable" />
-                <AnalyzeTimeTable :timetables="timetables"></AnalyzeTimeTable>
+                <AnalyzeTimeTable v-if="useUser().isAnalyzer()" :timetables="timetables" />
             </div>
         </div>
 
@@ -39,8 +39,12 @@
                         <Button variant="default" size="sm" @click="openAddShiftDialog(timetable)">
                             + Schicht hinzufügen
                         </Button>
+
+                        <Button variant="default" size="sm" @click="() => exportTimetable(timetable)">export</Button>
+
                         <RenameTimetable :timetable-id="timetable.id" :timetable-name="timetable.name"
-                            @rename="renameTimetable" />
+                            :committee-id="props.committee.id" :current-editors="timetable.editors || []"
+                            @rename="renameTimetable" @update-editors="updateTimetableEditors" />
                         <DeleteTimetable :timetable-id="timetable.id" :timetable-name="timetable.name"
                             @delete="deleteTimetable" />
                     </div>
@@ -70,12 +74,18 @@
                                     <div class="relative min-w-[150px]"
                                         :style="{ height: getDayContainerHeight(timetable, date) }">
                                         <!-- Shifts for this day -->
-                                        <div v-for="positioned in getPositionedShifts(timetable, date)"
+                                        <div v-for="(positioned, index) in getPositionedShifts(timetable, date)"
                                             :key="positioned.shift.id"
                                             class="absolute text-white rounded p-2 text-xs cursor-pointer hover:brightness-110 transition-all overflow-hidden"
                                             :style="positioned.style"
                                             @click="openEditShiftDialog(timetable, positioned.shift)">
-                                            <div class="font-semibold truncate">{{ positioned.shift.purpose }}</div>
+                                            <div class="flex items-start justify-between gap-1 mb-1">
+                                                <div class="font-semibold truncate">{{ positioned.shift.purpose }}</div>
+                                                <div
+                                                    class="bg-white/30 px-1.5 py-0.5 rounded font-bold text-[10px] flex-shrink-0">
+                                                    {{ String.fromCharCode(65 + index) }}
+                                                </div>
+                                            </div>
                                             <div class="opacity-90">{{ positioned.shift.startTime }} - {{
                                                 positioned.shift.endTime }}</div>
                                             <div v-if="positioned.shift.people.length > 0"
@@ -104,7 +114,7 @@
 
         <!-- Shift Dialog -->
         <ShiftDialog v-model:open="showShiftDialog" :shift="editingShift" :committee-id="props.committee.id"
-            @save="handleSaveShift" @update="handleUpdateShift" @delete="handleDeleteShift" />
+            :date-anchor="dateAnchor" @save="handleSaveShift" @update="handleUpdateShift" @delete="handleDeleteShift" />
     </div>
 </template>
 
@@ -120,6 +130,7 @@ import RenameTimetable from './modal/RenameTimetable.vue';
 import ShiftDialog from './modal/ShiftDialog.vue';
 import type { ExpandShift, ExpandTimeTable } from '@/lib/pb';
 import AnalyzeTimeTable from './modal/AnalyzeTimeTable.vue';
+import createExcel from './modal/CreateExcel';
 
 const props = defineProps({
     committee: {
@@ -136,6 +147,7 @@ const isLoading = ref(false);
 const showShiftDialog = ref(false);
 const currentTimetable = ref<TimetableResponse<ExpandTimeTable> | null>(null);
 const editingShift = ref<ShiftResponse<ExpandShift> | null>(null);
+const dateAnchor = ref<string>('');
 const peopleMap = ref<Map<string, string>>(new Map());
 
 // Fetch all people and create a lookup map
@@ -351,20 +363,31 @@ function renameTimetable(id: string, name: string) {
     }
 }
 
+function updateTimetableEditors(id: string, editors: string[]) {
+    const index = timetables.value.findIndex(t => t.id === id);
+    if (index !== -1) {
+        timetables.value[index].editors = editors;
+    }
+}
+
 // Shift dialog operations
 function openAddShiftDialog(timetable: TimetableResponse<ExpandTimeTable>) {
     currentTimetable.value = timetable;
     editingShift.value = null;
+    // Use the last date from the timetable as anchor, or empty string (which will default to today)
+    const dates = getUniqueDates(timetable);
+    dateAnchor.value = dates.length > 0 ? dates[dates.length - 1] : '';
     showShiftDialog.value = true;
 }
 
 function openEditShiftDialog(timetable: TimetableResponse<ExpandTimeTable>, shift: ShiftResponse<ExpandShift>) {
     currentTimetable.value = timetable;
     editingShift.value = shift;
+    dateAnchor.value = shift.date; // Use the shift's date as anchor
     showShiftDialog.value = true;
 }
 
-async function handleSaveShift(shiftData: { date: string; purpose: string; startTime: string; endTime: string; people: string[] }) {
+async function handleSaveShift(shiftData: { date: string; purpose: string; startTime: string; endTime: string; people: string[], extern: boolean }) {
     if (!currentTimetable.value) return;
     try {
         let newShift = await client.collection('shift').create({
@@ -374,6 +397,8 @@ async function handleSaveShift(shiftData: { date: string; purpose: string; start
             startTime: shiftData.startTime,
             endTime: shiftData.endTime,
             people: shiftData.people,
+            extern: shiftData.extern,
+            createdby: useUser().userId
         }) as ShiftResponse<ExpandShift>
 
         newShift.expand = {} as ExpandShift;
@@ -410,6 +435,20 @@ async function handleDeleteShift(shiftId: string) {
             currentTimetable.value.expand.shift_via_timetable.splice(index, 1);
         }
     }
+}
+
+async function exportTimetable(timetable: TimetableResponse<ExpandTimeTable>) {
+    if (!timetable) return;
+    const blob = await createExcel(timetable, peopleMap.value);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${timetable.name}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
 }
 </script>
 

@@ -30,11 +30,7 @@ export type RecordIdString = string;
 export type FileNameString = string & { readonly filename: unique symbol };
 export type HTMLString = string;
 
-type ExpandType<T> = unknown extends T
-    ? T extends unknown
-        ? { expand?: unknown }
-        : { expand: T }
-    : { expand: T };
+type ExpandType<T> = unknown extends T ? (T extends unknown ? { expand?: unknown } : { expand: T }) : { expand: T };
 
 // System fields
 export type BaseSystemFields<T = unknown> = {
@@ -130,6 +126,7 @@ export type TimetableRecord = {
     ausschuss: RecordIdString;
     created: IsoAutoDateString;
     createdby: RecordIdString;
+    editors: RecordIdString[];
     id: string;
     name: string;
     updated: IsoAutoDateString;
@@ -146,6 +143,7 @@ export type ShiftRecord = {
     startTime: string;
     timetable: RecordIdString;
     updated: IsoAutoDateString;
+    extern: boolean;
 };
 
 export type PeopleRecord = {
@@ -236,41 +234,25 @@ export type UsersRecord = {
     tokenKey: string;
     updated: IsoAutoDateString;
     verified?: boolean;
+    analyzer: boolean;
 };
 
 // Response types include system fields and match responses from the PocketBase API
-export type AuthoriginsResponse<Texpand = unknown> =
-    Required<AuthoriginsRecord> & BaseSystemFields<Texpand>;
-export type ExternalauthsResponse<Texpand = unknown> =
-    Required<ExternalauthsRecord> & BaseSystemFields<Texpand>;
-export type MfasResponse<Texpand = unknown> = Required<MfasRecord> &
-    BaseSystemFields<Texpand>;
-export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> &
-    BaseSystemFields<Texpand>;
-export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> &
-    AuthSystemFields<Texpand>;
-export type AusschussResponse<Texpand = unknown> = Required<AusschussRecord> &
-    BaseSystemFields<Texpand>;
-export type BudgetResponse<Tbudget = unknown, Texpand = unknown> = Required<
-    BudgetRecord<Tbudget>
-> &
-    BaseSystemFields<Texpand>;
-export type MilestoneResponse<Texpand = unknown> = Required<MilestoneRecord> &
-    BaseSystemFields<Texpand>;
-export type TimetableResponse<Texpand = unknown> = Required<TimetableRecord> &
-    BaseSystemFields<Texpand>;
-export type ShiftResponse<Texpand = unknown> = Required<ShiftRecord> &
-    BaseSystemFields<Texpand>;
-export type PeopleResponse<Texpand = unknown> = Required<PeopleRecord> &
-    BaseSystemFields<Texpand>;
-export type OverviewTransactionResponse<Texpand = unknown> =
-    Required<OverviewTransactionRecord> & BaseSystemFields<Texpand>;
-export type TransactionResponse<Texpand = unknown> =
-    Required<TransactionRecord> & BaseSystemFields<Texpand>;
-export type TransactionAuthResponse<Texpand = unknown> =
-    Required<TransactionAuthRecord> & BaseSystemFields<Texpand>;
-export type UsersResponse<Texpand = unknown> = Required<UsersRecord> &
-    AuthSystemFields<Texpand>;
+export type AuthoriginsResponse<Texpand = unknown> = Required<AuthoriginsRecord> & BaseSystemFields<Texpand>;
+export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRecord> & BaseSystemFields<Texpand>;
+export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>;
+export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>;
+export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>;
+export type AusschussResponse<Texpand = unknown> = Required<AusschussRecord> & BaseSystemFields<Texpand>;
+export type BudgetResponse<Tbudget = unknown, Texpand = unknown> = Required<BudgetRecord<Tbudget>> & BaseSystemFields<Texpand>;
+export type MilestoneResponse<Texpand = unknown> = Required<MilestoneRecord> & BaseSystemFields<Texpand>;
+export type TimetableResponse<Texpand = unknown> = Required<TimetableRecord> & BaseSystemFields<Texpand>;
+export type ShiftResponse<Texpand = unknown> = Required<ShiftRecord> & BaseSystemFields<Texpand>;
+export type PeopleResponse<Texpand = unknown> = Required<PeopleRecord> & BaseSystemFields<Texpand>;
+export type OverviewTransactionResponse<Texpand = unknown> = Required<OverviewTransactionRecord> & BaseSystemFields<Texpand>;
+export type TransactionResponse<Texpand = unknown> = Required<TransactionRecord> & BaseSystemFields<Texpand>;
+export type TransactionAuthResponse<Texpand = unknown> = Required<TransactionAuthRecord> & BaseSystemFields<Texpand>;
+export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>;
 
 // Types containing all Records and Responses, useful for creating typing helper functions
 
@@ -315,9 +297,7 @@ export type CollectionResponses = {
 type ProcessCreateAndUpdateFields<T> = Omit<
     {
         // Omit AutoDate fields
-        [K in keyof T as Extract<T[K], IsoAutoDateString> extends never
-            ? K
-            : never]: T[K] extends infer U // Convert FileNameString to File
+        [K in keyof T as Extract<T[K], IsoAutoDateString> extends never ? K : never]: T[K] extends infer U // Convert FileNameString to File
             ? U extends FileNameString | FileNameString[]
                 ? U extends any[]
                     ? File[]
@@ -344,9 +324,7 @@ export type CreateBase<T> = {
 } & ProcessCreateAndUpdateFields<T>;
 
 // Update type for Auth collections
-export type UpdateAuth<T> = Partial<
-    Omit<ProcessCreateAndUpdateFields<T>, keyof AuthSystemFields>
-> & {
+export type UpdateAuth<T> = Partial<Omit<ProcessCreateAndUpdateFields<T>, keyof AuthSystemFields>> & {
     email?: string;
     emailVisibility?: boolean;
     oldPassword?: string;
@@ -356,27 +334,17 @@ export type UpdateAuth<T> = Partial<
 };
 
 // Update type for Base collections
-export type UpdateBase<T> = Partial<
-    Omit<ProcessCreateAndUpdateFields<T>, keyof BaseSystemFields>
->;
+export type UpdateBase<T> = Partial<Omit<ProcessCreateAndUpdateFields<T>, keyof BaseSystemFields>>;
 
 // Get the correct create type for any collection
-export type Create<T extends keyof CollectionResponses> =
-    CollectionResponses[T] extends AuthSystemFields
-        ? CreateAuth<CollectionRecords[T]>
-        : CreateBase<CollectionRecords[T]>;
+export type Create<T extends keyof CollectionResponses> = CollectionResponses[T] extends AuthSystemFields ? CreateAuth<CollectionRecords[T]> : CreateBase<CollectionRecords[T]>;
 
 // Get the correct update type for any collection
-export type Update<T extends keyof CollectionResponses> =
-    CollectionResponses[T] extends AuthSystemFields
-        ? UpdateAuth<CollectionRecords[T]>
-        : UpdateBase<CollectionRecords[T]>;
+export type Update<T extends keyof CollectionResponses> = CollectionResponses[T] extends AuthSystemFields ? UpdateAuth<CollectionRecords[T]> : UpdateBase<CollectionRecords[T]>;
 
 // Type for usage with type asserted PocketBase instance
 // https://github.com/pocketbase/js-sdk#specify-typescript-definitions
 
 export type TypedPocketBase = {
-    collection<T extends keyof CollectionResponses>(
-        idOrName: T,
-    ): RecordService<CollectionResponses[T]>;
+    collection<T extends keyof CollectionResponses>(idOrName: T): RecordService<CollectionResponses[T]>;
 } & PocketBase;

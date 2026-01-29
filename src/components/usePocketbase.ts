@@ -1,14 +1,8 @@
-import type {
-    AusschussRecord,
-    TypedPocketBase,
-    UsersRecord,
-} from '@/lib/pocketbase-types';
+import type { AusschussRecord, TypedPocketBase, UsersRecord } from '@/lib/pocketbase-types';
 import PocketBase from 'pocketbase';
 import { ref, type Ref } from 'vue';
 
-const client = new PocketBase(
-    import.meta.env.VITE_POCKETBASE_URL,
-) as TypedPocketBase;
+const client = new PocketBase(import.meta.env.VITE_POCKETBASE_URL) as TypedPocketBase;
 
 client.autoCancellation(false);
 
@@ -30,6 +24,7 @@ class User {
     private committe = ref<AusschussRecord[]>([]);
     private image: Ref<string | null> = ref(null);
     private pruefer!: boolean;
+    private analyzer!: boolean;
 
     private constructor() {
         if (!client.authStore.record) {
@@ -38,18 +33,19 @@ class User {
         client
             .collection('users')
             .getOne(client.authStore.record.id)
-            .then(userData => {
+            .then((userData) => {
                 const user = userData as UsersRecord;
                 this.id = user.id;
                 this.name = user.name ?? null;
                 this.email = user.email;
                 this.image.value = user.avatar ?? null;
+                this.analyzer = user.analyzer;
                 console.log('User image:', user.isPruefer);
                 this.pruefer = user.isPruefer ?? false;
                 console.log('User data:', user);
                 User._isInitialized.value = true;
             })
-            .catch(error => {
+            .catch((error) => {
                 console.error('Error fetching user record:', error);
                 throw error;
             });
@@ -57,12 +53,12 @@ class User {
         client
             .collection('ausschuss')
             .getList()
-            .then(comitteData => {
-                (comitteData.items as AusschussRecord[]).forEach(comitte => {
+            .then((comitteData) => {
+                (comitteData.items as AusschussRecord[]).forEach((comitte) => {
                     this.committe.value.push(comitte);
                 });
             })
-            .catch(error => {
+            .catch((error) => {
                 console.error('Error fetching comitte data:', error);
                 throw error;
             });
@@ -93,13 +89,7 @@ class User {
     getUserName() {
         if (this.name!.includes('.')) {
             const nameParts = this.name!.split('.');
-            return (
-                nameParts[0].charAt(0).toUpperCase() +
-                nameParts[0].slice(1) +
-                ' ' +
-                nameParts[1].charAt(0).toUpperCase() +
-                nameParts[1].slice(1)
-            );
+            return nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1) + ' ' + nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1);
         } else {
             return this.name;
         }
@@ -127,6 +117,10 @@ class User {
 
     isPruefer() {
         return this.pruefer;
+    }
+
+    isAnalyzer() {
+        return this.analyzer;
     }
 
     static get isInitialized() {

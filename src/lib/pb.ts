@@ -337,3 +337,7 @@ export type ExpandTransactionCommittee = {
 type ExpandMilestones = {
     transaction: TransactionResponse[];
 };
+
+export type ExpandAusschuss = {
+    users: UsersResponse[];
+};
