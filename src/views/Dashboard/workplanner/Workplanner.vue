@@ -275,11 +275,26 @@ function stringToColor(str: string): string {
     return `hsl(${hue}, 65%, 50%)`;
 }
 
+function getGlobalTimeRange(timetable: TimetableResponse<ExpandTimeTable>): { minStart: number; maxEnd: number } {
+    const allShifts = timetable.expand?.shift_via_timetable || [];
+    if (allShifts.length === 0) return { minStart: 0, maxEnd: 24 * 60 };
+
+    const minStart = Math.min(...allShifts.map(s => timeToMinutes(s.startTime)));
+    let maxEnd = Math.max(...allShifts.map(s => {
+        let endMinutes = timeToMinutes(s.endTime);
+        const startMinutes = timeToMinutes(s.startTime);
+        if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+        return endMinutes;
+    }));
+
+    return { minStart, maxEnd };
+}
+
 function getPositionedShifts(timetable: TimetableResponse<ExpandTimeTable>, date: string): PositionedShift[] {
     const shifts = getShiftsForDate(timetable, date);
     if (shifts.length === 0) return [];
 
-    const minStart = Math.min(...shifts.map(s => timeToMinutes(s.startTime)));
+    const { minStart } = getGlobalTimeRange(timetable);
     const PIXELS_PER_HOUR = 40;
 
     const columns: ShiftResponse<ExpandShift>[][] = [];
@@ -327,14 +342,14 @@ function getPositionedShifts(timetable: TimetableResponse<ExpandTimeTable>, date
 }
 
 function getDayContainerHeight(timetable: TimetableResponse<ExpandTimeTable>, date: string): string {
-    const shifts = getShiftsForDate(timetable, date);
-    if (shifts.length === 0) return '120px';
+    const allShifts = timetable.expand?.shift_via_timetable || [];
+    if (allShifts.length === 0) return '120px';
 
     const PIXELS_PER_HOUR = 40;
-    const minStart = Math.min(...shifts.map(s => timeToMinutes(s.startTime)));
+    const { minStart } = getGlobalTimeRange(timetable);
 
     let maxBottom = 0;
-    for (const shift of shifts) {
+    for (const shift of allShifts) {
         const startMinutes = timeToMinutes(shift.startTime);
         const top = ((startMinutes - minStart) / 60) * PIXELS_PER_HOUR;
         const height = getShiftHeight(shift);
