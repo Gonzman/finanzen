@@ -11,7 +11,6 @@ import {
 import { type PropType, computed, ref } from 'vue';
 import type {
     TransactionAuthResponse,
-    TransactionResponse,
 } from '@/lib/pocketbase-types';
 import {
     TransactionAuthStateOptions,
@@ -158,8 +157,8 @@ const truncateFilename = (filename: string, maxLength: number = 30) => {
                             <p>Bar: {{ transactionData.formattedAmountBar }}</p>
                         </div>
                         <span :class="`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${transactionData.isIncoming
-                                ? 'bg-green-50 text-green-700'
-                                : 'bg-red-50 text-red-700'
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-red-50 text-red-700'
                             }`">
                             {{ props.id.expand?.transaction.type }}
                         </span>

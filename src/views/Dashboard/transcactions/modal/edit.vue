@@ -18,6 +18,10 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits<{
+    updated: []
+}>();
+
 const title = ref(props.transaction.expand?.transaction.title || '');
 const amountKonto = ref<number | undefined>(props.transaction.expand?.transaction.amount || undefined);
 const amountBar = ref<number | undefined>(props.transaction.expand?.transaction.amount_bar || undefined);
@@ -60,8 +64,8 @@ function updateTransaction() {
     };
 
     // Handle recipe updates
-    if (images.value !== null) {
-        // New files selected - replace all
+    if (images.value !== null && images.value.length > 0) {
+        // New files selected - add to existing
         updateData.recipe = images.value;
     } else if (deletedRecipes.value.length > 0) {
         // Files were deleted - update with remaining files
@@ -70,6 +74,7 @@ function updateTransaction() {
 
     usePocketBase().collection('transaction').update(props.transaction.expand!.transaction.id, updateData).then(() => {
         console.log('Transaction updated successfully');
+        emit('updated');
     }).catch((error) => {
         console.error('Error updating transaction:', error);
     });
@@ -92,7 +97,10 @@ const isValid = computed(() => {
 function changeImage(event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.files) {
-        images.value = Array.from(target.files);
+        if (images.value === null) {
+            images.value = [];
+        }
+        images.value = images.value.concat(Array.from(target.files));
     }
 }
 
@@ -187,7 +195,7 @@ function deleteRecipe(attachment: string) {
             <Label>Beleg</Label>
 
             <!-- Display existing recipes -->
-            <div v-if="existingRecipes.length > 0 && images === null">
+            <div v-if="existingRecipes.length > 0" class="mb-2">
                 <span class="text-sm text-muted-foreground">Vorhandene Belege:</span>
                 <div v-for="attachment in existingRecipes" :key="attachment" class="flex gap-2 mt-1">
                     <Button @click="openAttachment(attachment)" class="flex-1 justify-start" variant="outline">
@@ -204,9 +212,27 @@ function deleteRecipe(attachment: string) {
                 </div>
             </div>
 
+            <!-- Display newly selected files -->
+            <div v-if="images !== null && images.length > 0" class="mb-2">
+                <span class="text-sm text-muted-foreground">Neue Belege ({{ images.length }}):</span>
+                <div v-for="(file, index) in images" :key="index" class="flex gap-2 mt-1">
+                    <div class="flex-1 px-3 py-2 rounded-md border border-input bg-background text-sm">
+                        {{ truncateFilename(file.name) }}
+                    </div>
+                    <Button @click="images!.splice(index, 1)" variant="destructive" size="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                    </Button>
+                </div>
+            </div>
+
             <Input type="file" multiple @change="changeImage" />
-            <div v-if="images !== null" class="text-xs text-muted-foreground mt-1">
-                {{ images.length }} neue(s) Dokument(e) ausgewählt (ersetzt vorhandene Belege)
+            <div v-if="images !== null && images.length > 0" class="text-xs text-amber-600 mt-1">
+                Hinweis: Neue Belege werden zu den vorhandenen hinzugefügt
             </div>
 
             <DialogClose as-child>

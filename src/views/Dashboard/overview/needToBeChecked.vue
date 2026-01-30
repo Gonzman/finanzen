@@ -74,7 +74,7 @@
                                 <div class="flex flex-col">
                                     <Details :id="invoice" />
                                     <Pruefen :id="invoice" />
-                                    <Edit :transaction="invoice" />
+                                    <Edit :transaction="invoice" @updated="fetchTransactions" />
                                 </div>
                             </DropdownMenuContent>
                         </DropdownMenu>
