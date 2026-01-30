@@ -74,6 +74,7 @@
                                 <div class="flex flex-col">
                                     <Details :id="invoice" />
                                     <Pruefen :id="invoice" />
+                                    <Edit :transaction="invoice" />
                                 </div>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -96,6 +97,7 @@ import Button from '@/components/ui/button/Button.vue';
 import TransactionStateIcon from '@/components/dashboard/TransactionStateIcon.vue';
 import Details from '../transcactions/modal/details.vue';
 import Pruefen from '../transcactions/modal/pruefen.vue';
+import Edit from '../transcactions/modal/edit.vue';
 
 type ExpandedTransactionAuth = {
     transaction: TransactionResponse<{
