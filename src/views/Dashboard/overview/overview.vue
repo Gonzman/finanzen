@@ -31,72 +31,27 @@
     </Card>
   </div>
   <br></br>
-  <Chart />
-  <!--<br></br>
-  <Table>
-    <TableCaption>Liste aller Transaktionen</TableCaption>
-    <TableHeader>
-      <TableRow>
-        <TableHead class="w-[100px]">Gremium</TableHead>
-        <TableHead>Name</TableHead>
-        <TableHead>Status</TableHead>
-        <TableHead>Art</TableHead>
-        <TableHead>Meilenstein</TableHead>
-        <TableHead class="text-right">Betrag (Konto)</TableHead>
-        <TableHead class="text-right">Betrag (Bar)</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      <TableRow v-for="invoice in transactions">
-        <TableCell>
-          {{ invoice.ausschuss_name }}
-        </TableCell>
-        <TableCell class="font-medium">{{ invoice.title }}</TableCell>
-        <TableCell>
-          <TransactionStateIcon :state="invoice.auth_state" :size="14" />
-          <span class="text-sm">
-            {{ " " + invoice.auth_state }}
-          </span>
-        </TableCell>
-        <TableCell>
-          <span :class="`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${invoice.type === OverviewTransactionTypeOptions.Eingehend
-            ? 'bg-green-50 text-green-700'
-            : 'bg-red-50 text-red-700'
-            }`">
-            {{ invoice.type }}
-          </span>
-        </TableCell>
-        <TableCell>{{ invoice.milestone_name || "/" }}</TableCell>
-        <TableCell class="text-right">
-          <div class="flex items-center justify-end" :class="invoice.amount < 0 ? 'text-red-500' : 'text-green-500'">
-            {{ formatTransaction(invoice.amount, invoice.type).formattedAmount
-            }}
-          </div>
-        </TableCell>
-        <TableCell class="text-right">
-          <div class="flex items-center justify-end"
-            :class="invoice.amount_bar < 0 ? 'text-red-500' : 'text-green-500'">
-            {{ formatTransaction(invoice.amount_bar, invoice.type).formattedAmount
-            }}
-          </div>
-        </TableCell>
-      </TableRow>
-    </TableBody>
-  </Table>-->
+  <div v-if="useUser().isPruefer()"
+    class="flex-1 overflow-x-auto overflow-y-hidden flex flex-row snap-x snap-mandatory">
+    <div class="bg-white shrink-0 w-full h-full snap-start flex flex-col overflow-y-auto p-4">
+      <NeedToBeChecked class="w-full flex flex-col" />
+    </div>
+    <div class="bg-white shrink-0 w-full h-full snap-start flex flex-col overflow-y-auto p-4">
+      <Chart class="w-full flex flex-col" />
+    </div>
+  </div>
+  <Chart v-else />
 </template>
 
 <script setup lang="ts">
 import type { Team } from '@/components/dashboard/TeamSwitcher.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { usePocketBase } from '@/components/usePocketbase';
 import pb from '@/lib/pb';
-import { OverviewTransactionTypeOptions, type OverviewTransactionResponse } from '@/lib/pocketbase-types';
-import { formatCurrency, formatTransaction } from '@/ts/format';
+import { formatCurrency } from '@/ts/format';
 import { onMounted, ref } from 'vue';
-import type chart from './chart.vue';
 import Chart from './chart.vue';
-import Test from './test.vue';
+import { useUser } from '@/components/usePocketbase';
+import NeedToBeChecked from './needToBeChecked.vue';
 
 const props = defineProps({
   committee: {

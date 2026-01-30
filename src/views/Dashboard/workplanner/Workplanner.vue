@@ -26,7 +26,7 @@
 
         <div v-else class="flex-1 overflow-x-auto overflow-y-hidden flex flex-row snap-x snap-mandatory">
             <div v-for="timetable in timetables" :key="timetable.id"
-                class="bg-white border-r shadow-sm flex-shrink-0 w-full h-full snap-start flex flex-col overflow-y-auto">
+                class="bg-white border-r shadow-sm shrink-0 w-full h-full snap-start flex flex-col overflow-y-auto">
                 <!-- Timetable Header -->
                 <div class="flex items-center justify-between p-4 bg-gray-50 border-b">
                     <div>
