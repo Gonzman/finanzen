@@ -170,29 +170,16 @@ class pb {
         let konto = 0;
         let bar = 0;
         try {
-            const authorizedResult = await this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                sort: '-updated',
-                expand: 'transaction',
-                filter: `state != "${TransactionAuthStateOptions.Abgelehnt}" && state = "${TransactionAuthStateOptions.Autorisiert}"`,
-            });
+            const authorizedResult = await this.client.collection('budget').getFullList();
 
             for (const item of authorizedResult) {
-                konto += item.expand?.transaction.amount ?? 0;
-                bar += item.expand?.transaction.amount_bar ?? 0;
-            }
-
-            const inProgressResult = await this.client.collection('transactionAuth').getFullList<TransactionAuthResponse<ExpandTransaction>>({
-                sort: '-updated',
-                expand: 'transaction',
-                filter: `state = "${TransactionAuthStateOptions['In Bearbeitung']}" && transaction.type = "${TransactionTypeOptions.Ausgehend}"`,
-            });
-
-            for (const item of inProgressResult) {
-                konto += item.expand?.transaction.amount ?? 0;
-                bar += item.expand?.transaction.amount_bar ?? 0;
+                if (item.id == 'overall') {
+                    konto += Number(item.budget) || 0;
+                    bar += Number(item.budget_bar) || 0;
+                }
             }
         } catch (error) {
-            console.error('Error fetching budget by account:', error);
+            console.error('Error fetching budget:', error);
         }
 
         return { konto, bar };
