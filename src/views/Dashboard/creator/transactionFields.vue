@@ -114,12 +114,12 @@ const isValid = computed(() => {
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <Label>Konto (Bank)</Label>
-                <Input placeholder="+100 oder -50" v-model.number="amountKonto" inputmode="decimal" type="number"
+                <Input placeholder="+100 oder -50" v-model.number="amountKonto" inputmode="numeric" type="number"
                     step="0.01" @input="showAmountError = false" />
             </div>
             <div>
                 <Label>Barkasse</Label>
-                <Input placeholder="+100 oder -50" v-model.number="amountBar" inputmode="decimal" type="number"
+                <Input placeholder="+100 oder -50" v-model.number="amountBar" inputmode="numeric" type="number"
                     step="0.01" @input="showAmountError = false" />
             </div>
         </div>
