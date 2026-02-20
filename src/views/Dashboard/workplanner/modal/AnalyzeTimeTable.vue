@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -24,8 +25,12 @@ const emit = defineEmits<{
 }>();
 
 const open = ref(false);
-const name = ref('');
 const allPeople = ref<Array<{ id: string; name: string }>>([]);
+const excludedTimetableIds = ref<string[]>([]);
+
+const filteredTimetables = computed(() => {
+    return prop.timetables.filter((timetable) => !excludedTimetableIds.value.includes(timetable.id));
+});
 
 // Fetch all people when dialog opens
 const fetchAllPeople = async () => {
@@ -43,7 +48,21 @@ const fetchAllPeople = async () => {
 const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
         fetchAllPeople();
+        excludedTimetableIds.value = [];
     }
+};
+
+const setTimetableExcluded = (timetableId: string, checked: boolean | 'indeterminate') => {
+    const shouldExclude = checked === true;
+
+    if (shouldExclude) {
+        if (!excludedTimetableIds.value.includes(timetableId)) {
+            excludedTimetableIds.value = [...excludedTimetableIds.value, timetableId];
+        }
+        return;
+    }
+
+    excludedTimetableIds.value = excludedTimetableIds.value.filter((id) => id !== timetableId);
 };
 
 // Calculate shift duration in hours
@@ -61,7 +80,7 @@ const calculateShiftDuration = (startTime: string, endTime: string): number => {
 const personShiftStats = computed(() => {
     const shiftCounts = new Map<string, { name: string; count: number; totalHours: number; weightedHours: number; shifts: any[] }>();
 
-    prop.timetables.forEach((timetable) => {
+    filteredTimetables.value.forEach((timetable) => {
         const shifts = timetable.expand?.shift_via_timetable || [];
 
         shifts.forEach((shift) => {
@@ -117,10 +136,18 @@ const personShiftStats = computed(() => {
 });
 
 const totalShifts = computed(() => {
-    return prop.timetables.reduce((total, timetable) => {
+    return filteredTimetables.value.reduce((total, timetable) => {
         return total + (timetable.expand?.shift_via_timetable?.length || 0);
     }, 0);
 });
+
+const getShiftPercentage = (shiftCount: number) => {
+    if (totalShifts.value === 0) {
+        return '0.0';
+    }
+
+    return ((shiftCount / totalShifts.value) * 100).toFixed(1);
+};
 
 </script>
 
@@ -137,6 +164,22 @@ const totalShifts = computed(() => {
                 </DialogDescription>
             </DialogHeader>
             <div class="grid gap-4 py-4 overflow-y-auto flex-1">
+                <div class="rounded-lg border p-4 space-y-3">
+                    <p class="text-sm font-medium">Dienstpläne von der Berechnung ausschließen</p>
+                    <div v-if="prop.timetables.length > 0" class="space-y-2">
+                        <div v-for="timetable in prop.timetables" :key="timetable.id"
+                            class="flex items-center space-x-3 p-2 rounded hover:bg-muted/40">
+                            <Checkbox :id="`exclude-${timetable.id}`"
+                                :model-value="excludedTimetableIds.includes(timetable.id)"
+                                @update:model-value="(checked: boolean | 'indeterminate') => setTimetableExcluded(timetable.id, checked)" />
+                            <label :for="`exclude-${timetable.id}`" class="text-sm cursor-pointer">
+                                {{ timetable.name }}
+                            </label>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-muted-foreground">Keine Dienstpläne vorhanden</p>
+                </div>
+
                 <div class="mb-4">
                     <p class="text-sm text-muted-foreground">
                         Gesamt Schichten: <strong>{{ totalShifts }}</strong>
@@ -183,7 +226,7 @@ const totalShifts = computed(() => {
                                                 person.weightedHours.toFixed(1) }}h)</span>
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm text-muted-foreground">
-                                            {{ ((person.count / totalShifts) * 100).toFixed(1) }}%
+                                            {{ getShiftPercentage(person.count) }}%
                                         </td>
                                     </tr>
                                 </tbody>
@@ -193,12 +236,12 @@ const totalShifts = computed(() => {
 
                     <!-- Top Performer Highlight -->
                     <div v-if="personShiftStats[0]"
-                        class="rounded-lg border bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 p-4">
+                        class="rounded-lg border bg-linear-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 p-4">
                         <h3 class="font-semibold text-lg mb-2">🏆 Top Performer</h3>
                         <p class="text-sm">
                             <strong>{{ personShiftStats[0].name }}</strong> hat die meisten Schichten übernommen mit
                             <strong>{{ personShiftStats[0].count }} Schichten</strong>
-                            ({{ ((personShiftStats[0].count / totalShifts) * 100).toFixed(1) }}% aller Schichten)
+                            ({{ getShiftPercentage(personShiftStats[0].count) }}% aller Schichten)
                             und insgesamt <strong>{{ personShiftStats[0].totalHours.toFixed(1) }} Stunden</strong>
                             <span class="text-muted-foreground">({{ personShiftStats[0].weightedHours.toFixed(1) }}h
                                 gewichtet)</span> gearbeitet.
