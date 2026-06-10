@@ -24,6 +24,8 @@ const emit = defineEmits<{
     (e: 'rename', id: string, name: string): void;
 }>();
 
+const hideNames = ref(true);
+
 const open = ref(false);
 const allPeople = ref<Array<{ id: string; name: string }>>([]);
 const excludedTimetableIds = ref<string[]>([]);
@@ -149,6 +151,10 @@ const getShiftPercentage = (shiftCount: number) => {
     return ((shiftCount / totalShifts.value) * 100).toFixed(1);
 };
 
+function toogleNames() {
+    hideNames.value = !hideNames.value
+}
+
 </script>
 
 <template>
@@ -180,6 +186,10 @@ const getShiftPercentage = (shiftCount: number) => {
                     <p v-else class="text-sm text-muted-foreground">Keine Dienstpläne vorhanden</p>
                 </div>
 
+                <div class="mb-4">
+                    <button @click="toogleNames"> {{ hideNames ? "Namen Anzeigen" :
+                        "Namen verstecken" }}</button>
+                </div>
                 <div class="mb-4">
                     <p class="text-sm text-muted-foreground">
                         Gesamt Schichten: <strong>{{ totalShifts }}</strong>
@@ -216,7 +226,7 @@ const getShiftPercentage = (shiftCount: number) => {
                                             <span v-else class="text-muted-foreground">{{ index + 1 }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-sm font-medium">
-                                            {{ person.name }}
+                                            {{ hideNames ? "###" : person.name }}
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm font-semibold">
                                             {{ person.count }}
